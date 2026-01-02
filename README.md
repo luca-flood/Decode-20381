@@ -1,4 +1,4 @@
-## NOTICE
+# NOTICE
 This repository contains the specialized autonomous and control software for Team 20381 during the INTO THE DEEP (2024-2025) competition season.
 
 ## Welcome!
