@@ -30,18 +30,20 @@ public class outtakeSubsystem implements Subsystem {
     //public static PIDCoefficients PIDcoefficients = new PIDCoefficients(0.05, 0, 0.01);
    
     ControlSystem controlSystem = ControlSystem.builder()
-            .velPid(0.007, 0, 0.003)
-            .basicFF(0.0004, 0, 0.11)
+            .velPid(0.01, 0, 0.003)
+            .basicFF(0.0003, 0, 0.1)
             .build();
-    private MotorEx outtake = new MotorEx("outtake");
+    private MotorEx outtake1 = new MotorEx("outtake1");
+    private MotorEx outtake2 = new MotorEx("outtake2");
 
     public Command noPower() {
-        offJawn = true;
-        return new SetPower(outtake, 0);
-    };
+        return new SetPower(outtake1, 0);
+    }
 
     public Command off() {
         offJawn = true;
+        outtake1.setPower(0);
+        outtake2.setPower(0);
         return new RunToVelocity(controlSystem, 0).requires(this);
     }
     public Command close() {
@@ -62,29 +64,33 @@ public class outtakeSubsystem implements Subsystem {
     }
     public Command newClose = new RunToVelocity(controlSystem, 1400).requires(this);
 
-    public Command crypticJew = new RunToVelocity(controlSystem, 2100).requires(this);
+    public Command crypticJew = new RunToVelocity(controlSystem, 3000).requires(this);
     public Command auto() {
         offJawn = false;
         return new RunToVelocity(controlSystem, 1500).requires(this);
     }
 
+    public Command setVel(double goal) {
+        return new RunToVelocity(controlSystem, goal).requires(this);
+    }
+
     @Override
     public void initialize() {
-        outtake.setPower(0);
+        outtake1.setDirection(-1);
+        outtake1.setPower(0);
+        outtake2.setPower(0);
     }
 
     public double getJawn() {
-        return outtake.getVelocity();
+        return outtake2.getVelocity();
     }
+
 
     @Override
     public void periodic(){
-//        if (offJawn) {
-//            outtake.setPower(0);
-//        }
-//        else {
-            outtake.setPower(
-                    controlSystem.calculate(outtake.getState()));
-//        }
+        outtake1.setPower(
+                controlSystem.calculate(outtake1.getState()));
+        outtake2.setPower(
+                controlSystem.calculate(outtake2.getState()));
     }
 }

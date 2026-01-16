@@ -41,7 +41,7 @@ public class Meet1Auton2Blue extends NextFTCOpMode {
         return new SequentialGroup(
                 hoodSubsystem.INSTANCE.far,
                 //outtakeSubsystem.INSTANCE.off,
-                outtakeSubsystem.INSTANCE.noPower(),
+//                outtakeSubsystem.INSTANCE.noPower(),
                 new Delay(5),
                 outtakeSubsystem.INSTANCE.far(),
                 new Delay(0.3),
@@ -73,7 +73,7 @@ public class Meet1Auton2Blue extends NextFTCOpMode {
 
         paths = new Paths(follower); // Build paths
         outtakeSubsystem.INSTANCE.off().schedule();
-        outtakeSubsystem.INSTANCE.noPower().schedule();
+//        outtakeSubsystem.INSTANCE.noPower().schedule();
         opmodeTimer = new Timer();
         opmodeTimer.resetTimer();
 

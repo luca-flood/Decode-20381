@@ -14,6 +14,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import dev.nextftc.bindings.BindingManager;
 import dev.nextftc.bindings.Button;
 import dev.nextftc.control.KineticState;
+import dev.nextftc.core.commands.delays.Delay;
 import dev.nextftc.core.commands.groups.SequentialGroup;
 import dev.nextftc.core.components.BindingsComponent;
 import dev.nextftc.core.components.SubsystemComponent;
@@ -33,10 +34,20 @@ import org.firstinspires.ftc.teamcode.opmode.Subsystems.transferSubsystem;
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.turretSubsystem;
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.turretSubsystemLimelight;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
-@Disabled
 
 @TeleOp(name="testmaxxing", group="Linear Opmode")
 public class veloHoodtest extends NextFTCOpMode {
+
+    public double getDistance(double ta) {
+        return 75.16142 * Math.pow(ta, -0.47932);
+    }
+    public double getHoodAngle(double distance) {
+        return 0.00578881 * distance - 0.00802588;
+    }
+
+    public double getVelocity(double distance) {
+        return 10.81866 * distance + 1084.95409;
+    }
     public veloHoodtest() {
 
         addComponents(
@@ -56,12 +67,16 @@ public class veloHoodtest extends NextFTCOpMode {
     }
 
     double targetVel;
+    double targetHood = 1;
     double yaw;
     double distance;
     double delay;
     double clankerX;
     double clankerY;
     double clankerR;
+    double blueX = 0;
+    double blueY = 144;
+    double offset = 8.8;
 
     Follower clanka;
 
@@ -75,6 +90,7 @@ public class veloHoodtest extends NextFTCOpMode {
     @Override
     public void onInit() {
         clanka = PedroComponent.follower();
+        transferSubsystem.INSTANCE.toNeutral.schedule();
 
         PedroComponent.follower().setStartingPose(new Pose(72, 72, 90));
 
@@ -124,10 +140,10 @@ public class veloHoodtest extends NextFTCOpMode {
                 whenBecomesTrue(multiFunctionSubsystem.INSTANCE.transpherSequencNiga()
                 );
 
-        Button gamepad1dpadright = button(() -> gamepad1.dpad_right);
-        gamepad1dpadright.
-                whenTrue(transferSubsystem.INSTANCE.toOuttake)
-                .whenBecomesFalse(transferSubsystem.INSTANCE.toNeutral);
+//        Button gamepad1dpadright = button(() -> gamepad1.dpad_right);
+//        gamepad1dpadright.
+//                whenTrue(transferSubsystem.INSTANCE.toOuttake)
+//                .whenBecomesFalse(transferSubsystem.INSTANCE.toNeutral);
 
         Button gamepad1y = button(() -> gamepad1.y);
         gamepad1y.
@@ -167,57 +183,98 @@ public class veloHoodtest extends NextFTCOpMode {
             distance = llresult.getTa();
             delay = llresult.getStaleness();
             telemetry.update();
-
+            distance = getDistance(llresult.getTa());
+        }
+        else {
+            distance = Math.sqrt(Math.pow((blueX - clankerX), 2) + Math.pow((blueY - clankerY), 2)) + offset;
         }
 
-        turretSubsystemLimelight.INSTANCE.updateAngle(yaw);
+        outtakeSubsystem.INSTANCE.setVel(getVelocity(distance)).schedule();
+        hoodSubsystem.INSTANCE.goon(getHoodAngle(distance)).schedule();
+
+//        turretSubsystemLimelight.INSTANCE.updateAngle(yaw);
 
 
-        if (gamepad1.right_trigger > 0.1) {
-            outtakeSubsystem.INSTANCE.closeMid().schedule();
-        }
-        else if (gamepad1.left_trigger > 0.1) {
-            outtakeSubsystem.INSTANCE.off().schedule();
-        }
-
-//        if (gamepad1.left_bumper) {
-//            intakeSubsystem.INSTANCE.spit.schedule();
+//        if (gamepad1.dpad_up) {
+//            outtakeSubsystem.INSTANCE.closeMid().schedule();
 //        }
-//        else if (gamepad1.right_bumper) {
-//            intakeSubsystem.INSTANCE.eat.schedule();;
+//        else if (gamepad1.left_trigger > 0.1) {
+//            outtakeSubsystem.INSTANCE.off().schedule();
 //        }
+
+        if (gamepad1.left_bumper) {
+            intakeSubsystem.INSTANCE.spit.schedule();
+        }
+        else if (gamepad1.right_bumper) {
+            intakeSubsystem.INSTANCE.eat.schedule();;
+        }
 //        else {
 //            intakeSubsystem.INSTANCE.sleep.schedule();
 //        }
 
-        telemetry.addData("Tx", llresult.getTx());
-        telemetry.addData("Ty", llresult.getTy());
-        telemetry.addData("Ta", llresult.getTa());
+          if (gamepad1.dpad_up) {
+              targetHood += 0.01;
+              targetHood = Math.min(targetHood, 1);
+          }
+          if (gamepad1.dpad_down) {
+              targetHood -= 0.01;
+              targetHood = Math.max(targetHood, 0);
+          }
 
-        telemetry.addData("delay", llresult.getStaleness());
+          if (gamepad1.right_trigger > 0.1) {
+              targetVel += 10;
+          }
+          if (gamepad1.left_trigger > 0.1) {
+              targetVel -= 10;
+              targetVel = Math.max(targetVel, 0);
+          }
 
+          if (gamepad1.a) {
+              new SequentialGroup(
+                      transferSubsystem.INSTANCE.toOuttake,
+                      new Delay(0.5),
+                      transferSubsystem.INSTANCE.toNeutral
+//                      intakeSubsystem.INSTANCE.eat,
+//                      new Delay(0.5),
+//                      intakeSubsystem.INSTANCE.sleep
+              ).schedule();
+          }
 
-        telemetry.addData("LL Latency", captureLatency + targetingLatency);
-        telemetry.addData("Parse Latency", parseLatency);
-
-
-        telemetry.addData("LL", "Temp: %.1fC, CPU: %.1f%%, FPS: %d",
-                status.getTemp(), status.getCpu(),(int)status.getFps());
-
-
-        telemetry.addData("Yaw", yaw);
-        telemetry.addData("Found", tagFound);
-
-        // Show the power being commanded by the PID for debugging
-        telemetry.addData("Turret Power Command",
-                turretSubsystem.INSTANCE.controlSystem.calculate(
-                        // Use the subsystem's internal yaw value for debugging the PID calculation
-                        new KineticState(turretSubsystem.INSTANCE.currentYaw, 0.0, 0.0)));
+//        telemetry.addData("Tx", llresult.getTx());
+//        telemetry.addData("Ty", llresult.getTy());
+//        telemetry.addData("Ta", llresult.getTa());
+//
+//        telemetry.addData("delay", llresult.getStaleness());
+//
+//
+//        telemetry.addData("LL Latency", captureLatency + targetingLatency);
+//        telemetry.addData("Parse Latency", parseLatency);
+//
+//
+//        telemetry.addData("LL", "Temp: %.1fC, CPU: %.1f%%, FPS: %d",
+//                status.getTemp(), status.getCpu(),(int)status.getFps());
+//
+//
+//        telemetry.addData("Yaw", yaw);
+//        telemetry.addData("Found", tagFound);
+//
+//        // Show the power being commanded by the PID for debugging
+//        telemetry.addData("Turret Power Command",
+//                turretSubsystem.INSTANCE.controlSystem.calculate(
+//                        // Use the subsystem's internal yaw value for debugging the PID calculation
+//                        new KineticState(turretSubsystem.INSTANCE.currentYaw, 0.0, 0.0)));
         telemetry.addData("Target Velocity: ", targetVel);
 //        telemetry.addData("Actual Velocity: ", outtake.getVelocity());
         telemetry.addData("Hood Position: ", hoodSubsystem.INSTANCE.getDaddy());
-//        telemetry.addData("Transfer Position: ", transfer.getPosition());
+        telemetry.addData("Transfer Position: ", transferSubsystem.INSTANCE.getJawn());
         telemetry.addData("Current Velocity", outtakeSubsystem.INSTANCE.getJawn());
+        telemetry.addData("Target Area", llresult.getTa());
+        telemetry.addData("Distance (inches)", distance);
+        telemetry.addData("Tag Found", tagFound);
+        telemetry.addData("Optimal Hood Angle", getHoodAngle(distance));
+        telemetry.addData("Optimal Velocity", getVelocity(distance));
+        telemetry.addData("Bot X", clankerX);
+        telemetry.addData("Bot Y", clankerY);
 
         telemetry.update();
     }
