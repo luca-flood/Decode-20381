@@ -104,12 +104,8 @@ public class turretCalcMaxxing extends NextFTCOpMode {
         telemetry.addData("Needed Angle Adjustment", theta);
         telemetry.addData("Tick Adjustment", tickAdjustment(calcDigger()));
         telemetry.update();
-        if (gamepad1.a) {
-            controller.setGoal(new KineticState(-ticks));
-        }
-        else if (gamepad1.b) {
-            controller.setGoal(new KineticState(0));
-        }
+
+        controller.setGoal(new KineticState(-ticks));
 
         KineticState currentState = new KineticState(
                 turret.getCurrentPosition(), turret.getVelocity()
