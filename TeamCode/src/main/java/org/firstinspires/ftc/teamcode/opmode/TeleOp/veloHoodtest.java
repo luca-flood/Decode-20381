@@ -10,9 +10,11 @@ import com.qualcomm.hardware.limelightvision.LLStatus;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
 
 import dev.nextftc.bindings.BindingManager;
 import dev.nextftc.bindings.Button;
+import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
 import dev.nextftc.core.commands.delays.Delay;
 import dev.nextftc.core.commands.groups.SequentialGroup;
@@ -38,6 +40,8 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 @TeleOp(name="testmaxxing", group="Linear Opmode")
 public class veloHoodtest extends NextFTCOpMode {
 
+    MotorEx turret = new MotorEx("turret").zeroed().reversed();
+    private ControlSystem controller;
     public double getDistance(double ta) {
         return 75.16142 * Math.pow(ta, -0.47932);
     }
@@ -77,7 +81,11 @@ public class veloHoodtest extends NextFTCOpMode {
     double blueX = 0;
     double blueY = 144;
     double offset = 8.8;
-
+    double goalX = 20;
+    double goalY = 115;
+    double heading = 90;
+    double theta;
+    double ticks;
     Follower clanka;
 
 
@@ -92,7 +100,15 @@ public class veloHoodtest extends NextFTCOpMode {
         clanka = PedroComponent.follower();
         transferSubsystem.INSTANCE.toNeutral.schedule();
 
-        PedroComponent.follower().setStartingPose(new Pose(72, 72, 90));
+        PedroComponent.follower().setStartingPose(new Pose(72, 72, Math.toRadians(90)));
+        turret.setCurrentPosition(0);
+        turret.getMotor().setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        controller = ControlSystem.builder()
+                .posPid(0.03, 0.0, 0.0)
+                .basicFF(0, 0, 0.1)
+                .build();
+
+        controller.setGoal(new KineticState(0.0));
 
 
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
@@ -161,6 +177,11 @@ public class veloHoodtest extends NextFTCOpMode {
     }
 
     public void onUpdate() {
+        theta = H2(calcDigger());
+        ticks = tickAdjustment(calcDigger());
+        heading = PedroComponent.follower().getHeading();
+        clankerX = PedroComponent.follower().getPose().getX();
+        clankerY = PedroComponent.follower().getPose().getY();
 
         clankerX = clanka.getPose().getX();
         clankerY = clanka.getPose().getY();
@@ -177,7 +198,7 @@ public class veloHoodtest extends NextFTCOpMode {
 
         boolean tagFound = (llresult != null && llresult.isValid());
 
-
+        controller.setGoal(new KineticState(-ticks));
         if (tagFound){
             yaw = llresult.getTx();
             distance = llresult.getTa();
@@ -212,33 +233,34 @@ public class veloHoodtest extends NextFTCOpMode {
 //            intakeSubsystem.INSTANCE.sleep.schedule();
 //        }
 
-          if (gamepad1.dpad_up) {
-              targetHood += 0.01;
-              targetHood = Math.min(targetHood, 1);
-          }
-          if (gamepad1.dpad_down) {
-              targetHood -= 0.01;
-              targetHood = Math.max(targetHood, 0);
-          }
+        if (gamepad1.dpad_up) {
+            targetHood += 0.01;
+            targetHood = Math.min(targetHood, 1);
+        }
+        if (gamepad1.dpad_down) {
+            targetHood -= 0.01;
+            targetHood = Math.max(targetHood, 0);
+        }
 
-          if (gamepad1.right_trigger > 0.1) {
-              targetVel += 10;
-          }
-          if (gamepad1.left_trigger > 0.1) {
-              targetVel -= 10;
-              targetVel = Math.max(targetVel, 0);
-          }
+        if (gamepad1.right_trigger > 0.1) {
+            targetVel += 10;
+        }
+        if (gamepad1.left_trigger > 0.1) {
+            targetVel -= 10;
+            targetVel = Math.max(targetVel, 0);
+        }
 
-          if (gamepad1.a) {
-              new SequentialGroup(
-                      transferSubsystem.INSTANCE.toOuttake,
-                      new Delay(0.5),
-                      transferSubsystem.INSTANCE.toNeutral
+        if (gamepad1.a) {
+            new SequentialGroup(
+                    transferSubsystem.INSTANCE.toOuttake,
+                    new Delay(0.5),
+                    transferSubsystem.INSTANCE.toNeutral
 //                      intakeSubsystem.INSTANCE.eat,
 //                      new Delay(0.5),
 //                      intakeSubsystem.INSTANCE.sleep
-              ).schedule();
-          }
+            ).schedule();
+        }
+
 
 //        telemetry.addData("Tx", llresult.getTx());
 //        telemetry.addData("Ty", llresult.getTy());
@@ -277,5 +299,44 @@ public class veloHoodtest extends NextFTCOpMode {
         telemetry.addData("Bot Y", clankerY);
 
         telemetry.update();
+    }
+
+    public double atan2(double y, double x) {
+        if (x > 0) {
+            return Math.atan(y / x);
+        }
+        else if (x < 0) {
+            if (y >= 0) {
+                return Math.atan(y / x) + Math.PI;
+            }
+            else {
+                return Math.atan(y / x) - Math.PI;
+            }
+        }
+        else {
+            if (y > 0) {
+                return 0.5 * Math.PI;
+            }
+            else if (y < 0) {
+                return -0.5 * Math.PI;
+            }
+            else {
+                return Math.tan(0.5 * Math.PI);
+            }
+        }
+    }
+    public double calcDigger() {
+        return atan2(goalY - (2 + clankerY), goalX - clankerX);
+    }
+    public double H1(double digger) {
+        return digger * 180 / Math.PI;
+    }
+
+    public double H2(double digger) {
+        return H1(digger) - heading * 180 / Math.PI;
+    }
+
+    public double tickAdjustment(double digger) {
+        return H2(digger) * 130/36*384.5/360;
     }
 }

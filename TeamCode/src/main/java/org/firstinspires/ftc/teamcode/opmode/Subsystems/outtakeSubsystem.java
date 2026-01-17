@@ -28,11 +28,14 @@ public class outtakeSubsystem implements Subsystem {
     private outtakeSubsystem(){ }
 
     //public static PIDCoefficients PIDcoefficients = new PIDCoefficients(0.05, 0, 0.01);
-   
+
+
     ControlSystem controlSystem = ControlSystem.builder()
             .velPid(0.01, 0, 0.003)
             .basicFF(0.0003, 0, 0.1)
-            .build();
+            .build();;
+
+
     private MotorEx outtake1 = new MotorEx("outtake1");
     private MotorEx outtake2 = new MotorEx("outtake2");
 

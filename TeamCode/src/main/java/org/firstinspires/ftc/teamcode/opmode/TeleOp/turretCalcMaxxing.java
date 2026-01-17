@@ -19,7 +19,6 @@ import dev.nextftc.ftc.components.BulkReadComponent;
 import dev.nextftc.hardware.driving.DriverControlledCommand;
 import dev.nextftc.hardware.driving.MecanumDriverControlled;
 import dev.nextftc.hardware.impl.MotorEx;
-@Disabled
 
 @TeleOp(name="turretKinematics", group="Linear Opmode")
 public class turretCalcMaxxing extends NextFTCOpMode {
@@ -58,7 +57,7 @@ public class turretCalcMaxxing extends NextFTCOpMode {
 
     @Override
     public void onInit(){
-        PedroComponent.follower().setStartingPose(new Pose(72, 8, Math.toRadians(90)));
+        PedroComponent.follower().setStartingPose(new Pose(72, 72, Math.toRadians(90)));
         turret.setCurrentPosition(0);
         turret.getMotor().setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         controller = ControlSystem.builder()
@@ -90,7 +89,7 @@ public class turretCalcMaxxing extends NextFTCOpMode {
 
     public void onUpdate() {
         PedroComponent.follower().update();
-        theta = H3(calcDigger());
+        theta = H2(calcDigger());
         ticks = tickAdjustment(calcDigger());
         heading = PedroComponent.follower().getHeading();
         clankerX = PedroComponent.follower().getPose().getX();
@@ -98,15 +97,15 @@ public class turretCalcMaxxing extends NextFTCOpMode {
         telemetry.addData("Current Bot X", clankerX);
         telemetry.addData("Current Boy Y", clankerY);
         telemetry.addData("Heading", heading * 180 / Math.PI);
-        telemetry.addData("X distance", goalY - (4 + clankerY));
-        telemetry.addData("Y distance", goalX - clankerX);
+        telemetry.addData("X distance", goalX - clankerX);
+        telemetry.addData("Y distance", goalY - (4 + clankerY));
         telemetry.addData("Digger", calcDigger());
         telemetry.addData("Current Position", turret.getCurrentPosition());
         telemetry.addData("Needed Angle Adjustment", theta);
         telemetry.addData("Tick Adjustment", tickAdjustment(calcDigger()));
         telemetry.update();
         if (gamepad1.a) {
-            controller.setGoal(new KineticState(theta));
+            controller.setGoal(new KineticState(-ticks));
         }
         else if (gamepad1.b) {
             controller.setGoal(new KineticState(0));
@@ -152,15 +151,11 @@ public class turretCalcMaxxing extends NextFTCOpMode {
     }
 
     public double H2(double digger) {
-        return H1(digger) + heading * 180 / Math.PI;
-    }
-
-    public double H3(double digger) {
-        return H2(digger) * ((1+(46.0 / 17)) * 28) / 360;
+        return H1(digger) - heading * 180 / Math.PI;
     }
 
     public double tickAdjustment(double digger) {
-        return H3(digger) * 5.2;
+        return H2(digger) * 130/36*384.5/360;
     }
 
 }
