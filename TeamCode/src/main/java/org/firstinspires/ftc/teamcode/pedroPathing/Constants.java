@@ -35,8 +35,8 @@ public class Constants {
                     0.6,
                     0.003))
             .centripetalScaling(0.0007)
-            .forwardZeroPowerAcceleration(-27.9211156068)
-            .lateralZeroPowerAcceleration(-69.4724629525)
+            .forwardZeroPowerAcceleration(-32.7205683333)
+            .lateralZeroPowerAcceleration(-87.7003368793)
             ;
 
     public static PathConstraints pathConstraints = new PathConstraints(
@@ -65,8 +65,8 @@ public class Constants {
             .leftRearMotorDirection(DcMotorSimple.Direction.REVERSE)
             .rightFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
             .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)
-            .xVelocity(68.147)
-            .yVelocity(63.0408049653)
+            .xVelocity(81.6375733333)
+            .yVelocity(53.2500663333)
             ;
 
     public static Follower createFollower(HardwareMap hardwareMap) {

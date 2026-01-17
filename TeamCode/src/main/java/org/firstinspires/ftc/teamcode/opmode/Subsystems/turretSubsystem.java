@@ -32,11 +32,11 @@ public class turretSubsystem implements Subsystem {
 
 
     public ControlSystem controlSystem = ControlSystem.builder()
-            .posPid(0.016, 0.0, 0.04)
-
+            .posPid(0.013, 0.0, 0.04)
             .posFilter(
                     filterBuilder ->
                             filterBuilder.lowPass(0.2).lowPass(0.4))
+
             .basicFF(0.01, 0.0, 0.18)
             .emaInterpolator(emaParams)
             .build();

@@ -34,12 +34,14 @@ public class turretCalcMaxxing extends NextFTCOpMode {
     double theta;
     double ticks;
 
+    double leftMax = 691;
+    double rightMax = -809;
     private final MotorEx frontLeftMotor = new MotorEx("leftFront").reversed();
     private final MotorEx frontRightMotor = new MotorEx("rightFront");
     private final MotorEx backLeftMotor = new MotorEx("leftRear").reversed();
     private final MotorEx backRightMotor = new MotorEx("rightRear");
 
-    public turretCalcMaxxing(){
+    public turretCalcMaxxing() {
         addComponents(
                 BindingsComponent.INSTANCE,
                 new SubsystemComponent(
@@ -49,14 +51,14 @@ public class turretCalcMaxxing extends NextFTCOpMode {
 //    //                    intakeSubsystem.INSTANCE,
 //    //                    outtakeSubsystem.INSTANCE,
 //    //                    multiFunctionSubsystem.INSTANCE
-                        ),
+                ),
                 BulkReadComponent.INSTANCE,
                 new PedroComponent(Constants::createFollower)
         );
     }
 
     @Override
-    public void onInit(){
+    public void onInit() {
         PedroComponent.follower().setStartingPose(new Pose(72, 72, Math.toRadians(90)));
         turret.setCurrentPosition(0);
         turret.getMotor().setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -89,11 +91,14 @@ public class turretCalcMaxxing extends NextFTCOpMode {
 
     public void onUpdate() {
         PedroComponent.follower().update();
-        theta = H2(calcDigger());
-        ticks = tickAdjustment(calcDigger());
+
         heading = PedroComponent.follower().getHeading();
         clankerX = PedroComponent.follower().getPose().getX();
         clankerY = PedroComponent.follower().getPose().getY();
+
+        theta = H2(calcDigger());
+        ticks = tickAdjustment(calcDigger());
+
         telemetry.addData("Current Bot X", clankerX);
         telemetry.addData("Current Boy Y", clankerY);
         telemetry.addData("Heading", heading * 180 / Math.PI);
@@ -117,43 +122,55 @@ public class turretCalcMaxxing extends NextFTCOpMode {
     public double atan2(double y, double x) {
         if (x > 0) {
             return Math.atan(y / x);
-        }
-        else if (x < 0) {
+        } else if (x < 0) {
             if (y >= 0) {
                 return Math.atan(y / x) + Math.PI;
-            }
-            else {
+            } else {
                 return Math.atan(y / x) - Math.PI;
             }
-        }
-        else {
+        } else {
             if (y > 0) {
                 return 0.5 * Math.PI;
-            }
-            else if (y < 0) {
+            } else if (y < 0) {
                 return -0.5 * Math.PI;
-            }
-            else {
+            } else {
                 return Math.tan(0.5 * Math.PI);
             }
         }
     }
 
     public double calcDigger() {
-        return atan2(goalY - (2 + clankerY), goalX - clankerX);
+        return atan2(goalY - (7 + clankerY), goalX - clankerX);
     }
+
     public double H1(double digger) {
         return digger * 180 / Math.PI;
     }
 
+    public double normalize(double angle) {
+        while (angle > Math.PI) angle -= 2 * Math.PI;
+        while (angle <= -Math.PI) angle += 2 * Math.PI;
+        return angle;
+    }
+
+
     public double H2(double digger) {
-        return H1(digger) - heading * 180 / Math.PI;
+        return normalize(digger - heading)* 180 / Math.PI;
     }
 
     public double tickAdjustment(double digger) {
-        return H2(digger) * 130/36*384.5/360;
-    }
+        double calcTicks = H2(digger) * 130/36 * 384.5/360;
+        double ticksPerRev = 384.5 * (130.0/36.0);
 
+        if(leftMax != 0 && calcTicks > leftMax){
+            calcTicks -= ticksPerRev;
+        }
+
+        else if (rightMax != 0 && calcTicks < rightMax) {
+            calcTicks += ticksPerRev;
+        }
+        return calcTicks;
+    }
 }
 
 

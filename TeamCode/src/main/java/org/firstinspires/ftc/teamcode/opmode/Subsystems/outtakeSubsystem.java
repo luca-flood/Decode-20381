@@ -44,7 +44,7 @@ public class outtakeSubsystem implements Subsystem {
     }
 
     public Command off() {
-        offJawn = true;
+        //offJawn = true;
         outtake1.setPower(0);
         outtake2.setPower(0);
         return new RunToVelocity(controlSystem, 0).requires(this);
