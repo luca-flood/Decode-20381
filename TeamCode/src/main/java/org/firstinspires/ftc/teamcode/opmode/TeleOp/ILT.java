@@ -2,42 +2,55 @@ package org.firstinspires.ftc.teamcode.opmode.TeleOp;
 
 import static dev.nextftc.bindings.Bindings.button;
 
+import android.util.Size;
+
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
+import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import dev.nextftc.bindings.BindingManager;
-import dev.nextftc.bindings.Button;
 import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
-import dev.nextftc.core.commands.delays.Delay;
-import dev.nextftc.core.commands.groups.SequentialGroup;
 import dev.nextftc.core.components.BindingsComponent;
 import dev.nextftc.core.components.SubsystemComponent;
 import dev.nextftc.extensions.pedro.PedroComponent;
 import dev.nextftc.ftc.Gamepads;
 import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.ftc.components.BulkReadComponent;
-import dev.nextftc.hardware.driving.DriverControlledCommand;
 import dev.nextftc.hardware.driving.MecanumDriverControlled;
+import dev.nextftc.hardware.impl.CRServoEx;
 import dev.nextftc.hardware.impl.MotorEx;
 
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.hoodSubsystem;
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.intakeSubsystem;
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.multiFunctionSubsystem;
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.outtakeSubsystem;
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.transferSubsystem;
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.turretSubsystem;
-import org.firstinspires.ftc.teamcode.opmode.Subsystems.turretSubsystemLimelight;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.opencv.ColorBlobLocatorProcessor;
+import org.firstinspires.ftc.vision.opencv.ColorRange;
+import org.firstinspires.ftc.vision.opencv.ColorSpace;
+import org.firstinspires.ftc.vision.opencv.ImageRegion;
+import org.opencv.core.Scalar;
 
-@TeleOp(name="ILT", group="Linear Opmode")
+@TeleOp(name="ILT testing", group="Linear Opmode")
 public class ILT extends NextFTCOpMode {
 
-    // --- Hardware & Controllers ---
+    // hardware, controllers
     MotorEx turret = new MotorEx("turret").zeroed().reversed();
     private ControlSystem controller;
 
@@ -47,26 +60,78 @@ public class ILT extends NextFTCOpMode {
     MotorEx backRightMotor;
 
     Limelight3A limelight;
+    IMU imu;
     Follower clanka;
 
 
-
     // turret vars
-    double goalX = 5;
-    double goalY = 144;
+
+    boolean turretTracking = false;
+
+    double fx = 626.909;
+    double fy = 626.909;
+
+    double cx = 426.007;
+    double cy = 236.834;
+
+    boolean hasArtifact;
+
+    double robotYaw = 0;
+
+    double globalCameraYaw = 0;
+
+    Boolean blobDetected;
+
+    //define Color Ranges
+    ColorRange greenRange = new ColorRange(
+            ColorSpace.YCrCb,
+            new Scalar(15, 0, 0),     // Min (Y, Cr, Cb)
+            new Scalar(255, 127, 170)   // Max (Y, Cr, Cb)
+    );
+
+    //custom PURPLE Range (YCrCb), these values are NOT final
+    //purple is generally high in Red (Cr) and high in Blue (Cb)
+    ColorRange purpleRange = new ColorRange(
+            ColorSpace.YCrCb,
+            new Scalar(32, 130, 140),  // Min (Y, Cr, Cb)
+            new Scalar(255, 170, 200)   // Max (Y, Cr, Cb)
+    );
+
+    double clankerX, clankerY, clankerR, heading;
+    boolean running;
+    double targetVel;
+    double targetHood = 0;
+    double yaw;
+    double distance;
+    double delay;
     double blueX = 0;
     double blueY = 144;
     double offset = 8.8;
-
-    double clankerX, clankerY, clankerR, heading;
-    double theta, ticks;
+    double goalX = 7.1;
+    double goalY = 144;
+    double visionX = 0;
+    double visionY = 0;
+    double theta;
+    double ticks;
+    double ticksToDegrees = (130.0 / 36.0) * (384.5 / 360.0);
+    double robotHeadingDegrees = 0;
     double leftMax = 691;
     double rightMax = -809;
+    double xDiff = 0;
+    double yDiff = 0;
+    double limelightX = 0;
+    double limelightY = 0;
+
+    CRServoEx liftL;
+    CRServoEx liftR;
 
     // visionmaxxing init
-    double targetVel = 0;
-    double targetHood = 1;
-    double yaw, distance;
+    ColorBlobLocatorProcessor purpleProcessor;
+    ColorBlobLocatorProcessor greenProcessor;
+    VisionPortal portal;
+    DistanceSensor proxySens;
+    NormalizedColorSensor colorSens;
+    Servo backlight;
 
     public ILT() {
         addComponents(
@@ -77,7 +142,7 @@ public class ILT extends NextFTCOpMode {
                         intakeSubsystem.INSTANCE,
                         transferSubsystem.INSTANCE,
                         hoodSubsystem.INSTANCE,
-                        turretSubsystem.INSTANCE // Used for kinematic turret logic
+                        turretSubsystem.INSTANCE // used for kinematic turret logic
                 ),
                 BulkReadComponent.INSTANCE,
                 new PedroComponent(Constants::createFollower)
@@ -85,9 +150,26 @@ public class ILT extends NextFTCOpMode {
     }
 
     // velo/hood calcs
-    public double getDistance(double ta) { return 75.16142 * Math.pow(ta, -0.47932); }
-    public double getHoodAngle(double dist) { return 0.00578881 * dist - 0.00802588; }
-    public double getVelocity(double dist) { return 10.81866 * dist + 1084.95409; }
+    public double getDistance(double ta) {
+        return 75.16142 * Math.pow(ta, -0.47932);
+    }
+
+    public double getHoodAngle(double dist) {
+        return 0.00578881 * dist - 0.00802588;
+    }
+
+    public double getVelocity(double dist) {
+        return 10.81866 * dist + 1084.95409;
+    }
+
+    public double getVel(double dist) {
+        return 7.65268 * dist + 1123.06996;
+    }
+
+    public double getHood(double dist) {
+        return 71.71201 * Math.pow(dist, -1.17652);
+    }
+
 
     // turret calcs
 
@@ -121,6 +203,47 @@ public class ILT extends NextFTCOpMode {
 
     @Override
     public void onInit() {
+        // proxySens = hardwareMap.get(DistanceSensor.class, "proxySens");
+        // colorSens = hardwareMap.get(NormalizedColorSensor.class, "colorSens");
+        // backlight = hardwareMap.get(Servo.class, "backlight");
+
+        liftL = new CRServoEx("liftLeft");
+        liftR = new CRServoEx("liftRight");
+
+        imu = hardwareMap.get(IMU.class, "imu");
+
+        RevHubOrientationOnRobot revOrientation = new RevHubOrientationOnRobot(
+                RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
+                RevHubOrientationOnRobot.UsbFacingDirection.UP
+        );
+
+        imu.initialize(new IMU.Parameters(revOrientation));
+        imu.resetYaw();
+
+        hoodSubsystem.INSTANCE.goon(1);
+        purpleProcessor = new ColorBlobLocatorProcessor.Builder()
+                .setTargetColorRange(purpleRange)
+                .setContourMode(ColorBlobLocatorProcessor.ContourMode.EXTERNAL_ONLY)
+                .setRoi(ImageRegion.entireFrame())
+                .setDrawContours(false) //set to false for comp for faster processing
+                .setBlurSize(6)
+                .build();
+
+        greenProcessor = new ColorBlobLocatorProcessor.Builder()
+                .setTargetColorRange(greenRange)
+                .setContourMode(ColorBlobLocatorProcessor.ContourMode.EXTERNAL_ONLY)
+                .setRoi(ImageRegion.entireFrame())
+                .setDrawContours(false)
+                .setBlurSize(6)
+                .build();
+
+        portal = new VisionPortal.Builder()
+                .addProcessor(purpleProcessor)
+                .addProcessor(greenProcessor)
+                .setCameraResolution(new Size(864, 480)) // Your specified resolution
+                .setStreamFormat(VisionPortal.StreamFormat.MJPEG)
+                .setCamera(hardwareMap.get(WebcamName.class, "camera"))
+                .build();
 
         frontLeftMotor = new MotorEx("leftFront");
         frontRightMotor = new MotorEx("rightFront");
@@ -147,15 +270,17 @@ public class ILT extends NextFTCOpMode {
         controller.setGoal(new KineticState(0.0));
 
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
-        limelight.pipelineSwitch(0);
+        limelight.pipelineSwitch(3);
         telemetry.setMsTransmissionInterval(2);
+
+        targetVel = 0;
     }
 
     @Override
     public void onStartButtonPressed() {
         limelight.start();
 
-       //drive
+        //drive
         new MecanumDriverControlled(
                 frontLeftMotor, frontRightMotor, backLeftMotor, backRightMotor,
                 Gamepads.gamepad1().leftStickY().negate(),
@@ -163,15 +288,15 @@ public class ILT extends NextFTCOpMode {
                 Gamepads.gamepad1().rightStickX()
         ).schedule();
         //button maxxing
-        button(() -> gamepad1.x).whenBecomesTrue(new SequentialGroup(
-                outtakeSubsystem.INSTANCE.closeMid(),
-                multiFunctionSubsystem.INSTANCE.transferSequenceM3CloseMid(),
-                outtakeSubsystem.INSTANCE.off()
-        ));
+//        button(() -> gamepad1.x).whenBecomesTrue(
+//                new SequentialGroup(
+//                outtakeSubsystem.INSTANCE.setVel(getVelocity(distance)),
+//                multiFunctionSubsystem.INSTANCE.shootSeq(getHoodAngle(distance)),
+//                outtakeSubsystem.INSTANCE.off()
+//        ));
 
 
-
-        button(() -> gamepad1.dpad_left).whenBecomesTrue(multiFunctionSubsystem.INSTANCE.transpherSequencNiga());
+        button(() -> gamepad1.y).whenBecomesTrue(multiFunctionSubsystem.INSTANCE.transpherSequencNiga());
 
     }
 
@@ -180,18 +305,56 @@ public class ILT extends NextFTCOpMode {
         clanka.update();
         BindingManager.update();
 
+        // blobDetected = checkForBlobs(portal, purpleProcessor, greenProcessor);
         // robot pose(X, Y, R)
         heading = clanka.getHeading();
         clankerX = clanka.getPose().getX();
         clankerY = clanka.getPose().getY();
 
+        xDiff = clankerX - limelightX;
+        yDiff = clankerY - limelightY;
+
+        while (globalCameraYaw > 180)  globalCameraYaw -= 360;
+        while (globalCameraYaw <= -180) globalCameraYaw += 360;
+
+        robotYaw = -imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+
+        double turretYaw = turret.getCurrentPosition() / ticksToDegrees;
+
+    //    double totalYaw = Math.toDegrees(heading) + turretYaw;
+        robotHeadingDegrees = Math.toDegrees(clanka.getHeading());
+
+        double globalCameraYaw = robotHeadingDegrees + turretYaw - 90.0 ;
+
+        limelight.updateRobotOrientation(globalCameraYaw);
+
         // ll digga
-        LLResult llresult = limelight.getLatestResult();
-        boolean tagFound = (llresult != null && llresult.isValid());
+        LLResult result = limelight.getLatestResult();
+        boolean tagFound = (result != null && result.isValid());
 
         if (tagFound) {
-            yaw = llresult.getTx();
-            distance = getDistance(llresult.getTa());
+            Pose3D botpose = result.getBotpose_MT2();
+
+            visionX = (botpose.getPosition().x * 39.3701) +72; //ll center is (0,0) but pedro center is (72, 72)
+            visionY = (botpose.getPosition().y * 39.3701) +72;
+            // double visionHeading = Math.toRadians(botpose[5]);
+
+            xDiff = Math.abs(visionX - clankerX);
+            yDiff = Math.abs(visionY - clankerY);
+            //double distError = Math.hypot(xDiff, yDiff); //does pythagorean: accepts (x,y) outputs hypotenuse
+            double distError = (xDiff+ yDiff)/2; //does pythagorean: accepts (x,y) outputs hypotenuse
+
+            if (distError > 5) { //2.5 = difference threshold(if diff greater than 2.5, use ll to relocalize)
+                // we set the robot's pose to the vision system's estimate
+                // pitch and roll are ignored(0, 0)
+                Pose correctedPose = new Pose(clankerX, clankerY, heading); //pose constructor accepts(x, y, heading)
+                clanka.setPose(correctedPose);
+
+                // update references
+                limelightX = visionX;
+                limelightY = visionY;
+            }
+//
         } else {
             // field-based distance calculation
             distance = Math.sqrt(Math.pow((blueX - clankerX), 2) + Math.pow((blueY - clankerY), 2)) + offset;
@@ -201,38 +364,130 @@ public class ILT extends NextFTCOpMode {
         theta = H2(calcDigger());
         ticks = tickAdjustment(calcDigger());
         controller.setGoal(new KineticState(-ticks));
-
-        KineticState currentState = new KineticState(turret.getCurrentPosition(), turret.getVelocity());
-        double turretPower = controller.calculate(currentState);
-        turret.setPower(turretPower);
+        //toggled by a
+        if (turretTracking) {
+            KineticState currentState = new KineticState(turret.getCurrentPosition(), turret.getVelocity());
+            double turretPower = controller.calculate(currentState);
+            turret.setPower(turretPower);
+        } else { //on opposite toggle, set pos to 0
+            turret.setCurrentPosition(0);
+        }
 
         // subsystem automation velo+hood
-        if(gamepad1.right_trigger > 0.1){
-            outtakeSubsystem.INSTANCE.setVel(getVelocity(distance)).schedule();
-        }
-        else{
+        if (gamepad1.right_trigger > 0.1) {
+            outtakeSubsystem.INSTANCE.setVel(getVel(distance)).schedule();
+        } else {
             outtakeSubsystem.INSTANCE.off().schedule();
         }
-        hoodSubsystem.INSTANCE.goon(getHoodAngle(distance)).schedule();
+        hoodSubsystem.INSTANCE.goon(getHood(distance)).schedule();
 
         // intake digger
-        if (gamepad1.left_bumper){
-            intakeSubsystem.INSTANCE.spit.schedule();
-        }
-        else if (gamepad1.right_bumper){
+        if (gamepad1.left_bumper) {
+            intakeSubsystem.INSTANCE.slowSpit.schedule();
+        } else if (gamepad1.right_bumper) {
             intakeSubsystem.INSTANCE.eat.schedule();
         }
-        else{
+//        else if (blobDetected != null) {
+//            if (blobDetected) {
+//                intakeSubsystem.INSTANCE.eat.schedule();
+//            }
+//            else {
+//                intakeSubsystem.INSTANCE.sleep.schedule();
+//            }
+//        }
+        else {
             intakeSubsystem.INSTANCE.sleep.schedule();
         }
 
+        if (gamepad1.a) {
+            if (turretTracking) {
+                turretTracking = false;
+            } else {
+                turretTracking = true;
+            }
+        }
+
+        if (gamepad1.dpad_up) {
+            liftL.setPower(1);
+            liftR.setPower(-1);
+        } else if (gamepad1.dpad_down) {
+            liftL.setPower(-1);
+            liftR.setPower(1);
+        } else {
+            liftL.setPower(0);
+            liftR.setPower(0);
+        }
+        telemetry.addLine("--- YAW DIAGNOSTICS ---");
+        telemetry.addData("1. Raw IMU (Negated)", robotHeadingDegrees);
+        telemetry.addData("2. Turret Degrees", turretYaw);
+        telemetry.addData("3. Combined Global Yaw", globalCameraYaw);
+
+        telemetry.addLine("--- COORDINATE CHECK ---");
+        telemetry.addData("Pedro Pose", "X: %.2f, Y: %.2f", clankerX, clankerY);
+        telemetry.addData("Vision Pose", "X: %.2f, Y: %.2f", visionX, visionY);
+        telemetry.addData("Difference", "X: %.2f, Y: %.2f", xDiff, yDiff);
+
+        telemetry.addLine("--- VISUAL SYNC TEST ---");
+        telemetry.addData("Action", (globalCameraYaw > -5 && globalCameraYaw < 5) ? "LOOKING AT RED WALL" :
+                (globalCameraYaw > 85 && globalCameraYaw < 95) ? "LOOKING AT BLUE DEPOT" : "ROTATING...");
 
         // telemetry
-        telemetry.addData("Distance", distance);
-        telemetry.addData("Tag Found", tagFound);
-        telemetry.addData("Turret Pos", turret.getCurrentPosition());
-        telemetry.addData("Target Ticks", -ticks);
-        telemetry.addData("Optimal Velo", getVelocity(distance));
+//        telemetry.addData("Distance", distance);
+//        telemetry.addData("Tag Found", tagFound);
+//        telemetry.addData("Turret Pos", turret.getCurrentPosition());
+//        //  telemetry.addData("Degree Offset (Limelight)", yaw);
+//        //  telemetry.addData("Degree Offset (Kinematics)", theta);
+//        telemetry.addData("Target Ticks", -ticks);
+//        telemetry.addData("Optimal Velo", getVel(distance));
+//        //  telemetry.addData("Camera Status", portal.getCameraState());
+//        telemetry.addData("Hood Angle", hoodSubsystem.INSTANCE.getDaddy());
+//        telemetry.addData("Pedro X", clankerX);
+//        telemetry.addData("Pedro Y", clankerY);
+//        telemetry.addData("Vision X", visionX);
+//        telemetry.addData("VisionY", visionY);
+//        telemetry.addData("imu data", imu.getRobotYawPitchRollAngles());
+
+        // List<ColorBlobLocatorProcessor.Blob> purpleBlobs = purpleProcessor.getBlobs();
+        // List<ColorBlobLocatorProcessor.Blob> greenBlobs = greenProcessor.getBlobs();
+
+        // Apply filter just for display count (logic is handled in function below)
+        // ColorBlobLocatorProcessor.Util.filterByArea(30, 20000, purpleBlobs);
+        // ColorBlobLocatorProcessor.Util.filterByArea(30, 20000, greenBlobs);
+
+        // telemetry.addData("Purple Count", purpleBlobs.size());
+        // telemetry.addData("Green Count", greenBlobs.size());
+        // telemetry.addData("Balls Found:", blobDetected);
         telemetry.update();
     }
+
+//    public Boolean checkForBlobs(VisionPortal portal,
+//                                 ColorBlobLocatorProcessor purpleProc,
+//                                 ColorBlobLocatorProcessor greenProc) {
+//
+//        // 1. Verify Camera is actually STREAMING.
+//        // If it's OPENING, STARTING_STREAM, or ERROR, we cannot claim "False" yet.
+//        if (portal.getCameraState() != VisionPortal.CameraState.STREAMING) {
+//            return null;
+//        }
+//
+//        // 2. Get Blobs
+//        List<ColorBlobLocatorProcessor.Blob> purpleBlobs = purpleProc.getBlobs();
+//        List<ColorBlobLocatorProcessor.Blob> greenBlobs = greenProc.getBlobs();
+//
+//        // 3. Filter out noise (Blobs smaller than 50 pixels area)
+//        ColorBlobLocatorProcessor.Util.filterByArea(50, 20000, purpleBlobs);
+//        ColorBlobLocatorProcessor.Util.filterByArea(50, 20000, greenBlobs);
+//
+//
+//        // 4. Check counts
+//        boolean seePurple = purpleBlobs.size() > 1;
+////        boolean seeGreen = greenBlobs.size() > 3;
+//
+//        // 5. Return logic
+//        return seePurple;
+/// /                || seeGreen;
+//    }
+        public YawPitchRollAngles getIMU(AngleUnit angleUnit){
+            return imu.getRobotYawPitchRollAngles();
+        }
 }

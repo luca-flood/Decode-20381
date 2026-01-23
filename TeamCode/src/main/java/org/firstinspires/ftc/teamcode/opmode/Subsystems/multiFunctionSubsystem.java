@@ -52,6 +52,24 @@ public class multiFunctionSubsystem implements Subsystem {
         ).requires(this);
     }
 
+    public Command shootSeq() {
+        return new SequentialGroup(
+                intakeSubsystem.INSTANCE.eat,
+                transferSubsystem.INSTANCE.toOuttake,
+                new Delay(.2),
+                transferSubsystem.INSTANCE.toNeutral,
+                new Delay(.25),
+                transferSubsystem.INSTANCE.toOuttake,
+                new Delay(.2),
+                transferSubsystem.INSTANCE.toNeutral,
+                new Delay(.25),
+                transferSubsystem.INSTANCE.toOuttake,
+                new Delay(.2),
+                transferSubsystem.INSTANCE.toNeutral,
+                intakeSubsystem.INSTANCE.sleep
+        ).requires(this);
+    }
+
     public Command transferSequenceM3CloseMid() {
         return new SequentialGroup(
                 hoodSubsystem.INSTANCE.closeMid,
@@ -141,7 +159,7 @@ public class multiFunctionSubsystem implements Subsystem {
         return new SequentialGroup(
                 transferSubsystem.INSTANCE.toNeutral,
                 transferSubsystem.INSTANCE.toOuttake,
-                new Delay(.2),
+                new Delay(.25),
                 transferSubsystem.INSTANCE.toNeutral)
                 .requires(this);
     }

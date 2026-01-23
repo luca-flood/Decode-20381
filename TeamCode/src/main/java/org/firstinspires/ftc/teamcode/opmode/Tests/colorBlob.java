@@ -76,7 +76,7 @@ public class colorBlob extends LinearOpMode {
                 .addProcessor(greenProcessor)
                 .setCameraResolution(new Size(864, 480)) // Your specified resolution
                 .setStreamFormat(VisionPortal.StreamFormat.MJPEG)
-                .setCamera(hardwareMap.get(WebcamName.class, "logitech"))
+                .setCamera(hardwareMap.get(WebcamName.class, "camera"))
                 .build();
 
 

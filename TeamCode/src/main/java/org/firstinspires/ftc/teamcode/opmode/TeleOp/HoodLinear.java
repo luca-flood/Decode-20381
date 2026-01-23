@@ -22,8 +22,13 @@ public class HoodLinear extends LinearOpMode {
             else if (gamepad1.right_bumper) {
                 position -= 0.01;
             }
-            hood.setPosition(position);
-
+            //hood.setPosition(position);
+            if(gamepad1.a){
+                hood.setPosition(0.2);
+            }
+            else if(gamepad1.b){
+                hood.setPosition(0.7);
+            }
             telemetry.addData("Hood Position - Diddy", hood.getPosition());
             telemetry.update();
         }

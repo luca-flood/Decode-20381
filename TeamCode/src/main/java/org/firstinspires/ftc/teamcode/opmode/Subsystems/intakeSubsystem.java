@@ -11,6 +11,7 @@ public class intakeSubsystem implements Subsystem {
     private intakeSubsystem(){ }
     private MotorEx intake = new MotorEx("intake");
     public Command eat = new SetPower(intake, -1).requires(this);
+    public Command slowSpit = new SetPower(intake, 0.5).requires(this);
 
     public Command spit = new SetPower(intake, 1).requires(this);
 
