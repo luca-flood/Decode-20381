@@ -15,7 +15,7 @@ public class transferSubsystem implements Subsystem {
     private ServoEx transfer = new ServoEx("transfer");
     public Command toOuttake = new SetPosition(transfer, 0.9).requires(this);
 
-    public Command toNeutral = new SetPosition(transfer, 0.68).requires(this);
+    public Command toNeutral = new SetPosition(transfer, 0.66).requires(this);
     public Command transferSequence() {
         return new SequentialGroup(
                 new Delay(0.2),

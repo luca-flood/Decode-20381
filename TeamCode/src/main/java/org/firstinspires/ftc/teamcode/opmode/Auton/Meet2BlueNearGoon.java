@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.opmode.Auton;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.hoodSubsystem;
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.multiFunctionSubsystem;
@@ -19,6 +20,7 @@ import dev.nextftc.core.components.SubsystemComponent;
 import dev.nextftc.extensions.pedro.PedroComponent;
 import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.ftc.components.BulkReadComponent;
+@Disabled
 
 @Autonomous(name = "blueNearGoon")
 public class Meet2BlueNearGoon extends NextFTCOpMode {

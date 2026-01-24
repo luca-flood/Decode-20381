@@ -18,7 +18,6 @@ import org.firstinspires.ftc.teamcode.opmode.Subsystems.multiFunctionSubsystem;
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.outtakeSubsystem;
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.transferSubsystem;
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.turretSubsystem;
-import org.firstinspires.ftc.teamcode.opmode.Subsystems.turretSubsystemLimelight;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 import dev.nextftc.bindings.BindingManager;
@@ -38,8 +37,8 @@ import dev.nextftc.ftc.components.BulkReadComponent;
 import dev.nextftc.hardware.impl.MotorEx;
 
 
-@Autonomous(name = "Blue Classifier Goon", group = "dit shigger")
-public class ILTclassifierBlue extends NextFTCOpMode {
+@Autonomous(name = "Blue nine  Classifier", group = "dit shigger")
+public class ILTnineClassifier extends NextFTCOpMode {
 
     private TelemetryManager panelsTelemetry; // Panels Telemetry instance
 
@@ -67,13 +66,21 @@ public class ILTclassifierBlue extends NextFTCOpMode {
     double theta;
     double ticks;
     Follower clanka;
+    double time = 0;
+
+    boolean subtracted5 = false;
+    boolean subtracted10 = false;
+    boolean subtracted15 = false;
+
+    boolean subtracted17 = false;
+
     Limelight3A limelight;
     double leftMax = 691;
     double rightMax = -809;
 
 
 
-    public ILTclassifierBlue() {
+    public ILTnineClassifier() {
         addComponents(
                 BindingsComponent.INSTANCE,
                 new SubsystemComponent(
@@ -107,12 +114,10 @@ public class ILTclassifierBlue extends NextFTCOpMode {
                         ),
                         new FollowPath(Path1)
                 ),
-               // outtakeSubsystem.INSTANCE.off(),
                 new ParallelGroup(
-                        (Command) new FollowPath(Path2),
+                        new FollowPath(Path2),
                         outtakeSubsystem.INSTANCE.setVel(1900),
                         hoodSubsystem.INSTANCE.goon(.20)
-                        //ILTclassifierBlue.decreaseX()
                 ),
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
                 hoodSubsystem.INSTANCE.goon(.33),
@@ -122,11 +127,10 @@ public class ILTclassifierBlue extends NextFTCOpMode {
                 new Delay (0.1),
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
                 hoodSubsystem.INSTANCE.goon(.29),
-                outtakeSubsystem.INSTANCE.setVel(1700),
+                outtakeSubsystem.INSTANCE.setVel(0),
                 intakeSubsystem.INSTANCE.eat,
                 new FollowPath(Path3),
                 new Delay(1),
-
                 new ParallelGroup(
                         new FollowPath(Path4),
                         outtakeSubsystem.INSTANCE.setVel(1900),
@@ -142,11 +146,9 @@ public class ILTclassifierBlue extends NextFTCOpMode {
                 hoodSubsystem.INSTANCE.goon(.29),
                 outtakeSubsystem.INSTANCE.setVel(1700),
                 intakeSubsystem.INSTANCE.eat,
-                new FollowPath(Path3),
-                new Delay(1),
-
+                new FollowPath(Path7),
                 new ParallelGroup(
-                        new FollowPath(Path4),
+                        new FollowPath(Path8),
                         outtakeSubsystem.INSTANCE.setVel(1900),
                         hoodSubsystem.INSTANCE.goon(.20)
                 ),
@@ -160,12 +162,11 @@ public class ILTclassifierBlue extends NextFTCOpMode {
                 hoodSubsystem.INSTANCE.goon(.29),
                 outtakeSubsystem.INSTANCE.setVel(1700),
                 intakeSubsystem.INSTANCE.eat,
-                new FollowPath(Path5),
-                new Delay(1),
+                new FollowPath(Path9),
                 new ParallelGroup(
-                    new FollowPath(Path6),
-                    outtakeSubsystem.INSTANCE.setVel(1900),
-                    hoodSubsystem.INSTANCE.goon(.20)
+                        new FollowPath(Path10),
+                        outtakeSubsystem.INSTANCE.setVel(1900),
+                        hoodSubsystem.INSTANCE.goon(.20)
                 ),
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
                 hoodSubsystem.INSTANCE.goon(.36),
@@ -179,10 +180,6 @@ public class ILTclassifierBlue extends NextFTCOpMode {
                 intakeSubsystem.INSTANCE.sleep,
                 new FollowPath(Path11)
 
-
-//                intakeSubsystem.INSTANCE.sleep
-//                new FollowPath(Path2),
-//                new FollowPath(Path3)
 
         );
     }
@@ -208,7 +205,7 @@ public class ILTclassifierBlue extends NextFTCOpMode {
         outtakeSubsystem.INSTANCE.off().schedule();
         outtakeSubsystem.INSTANCE.noPower().schedule();
         opmodeTimer = new Timer();
-        opmodeTimer.resetTimer();
+        //opmodeTimer.resetTimer();
 
 
         Path1 = clanka
@@ -247,44 +244,71 @@ public class ILTclassifierBlue extends NextFTCOpMode {
                 .addPath(
                         new BezierCurve(
                                 new Pose(9.500, 62.670),
-                                new Pose(55.800, 79.500)
+                                new Pose(57, 79.500)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(140), Math.toRadians(143))
                 .build();
 
-        Path5 = clanka
+        //path to grab 1st row of balls
+        Path7 = clanka
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(55.800, 79.500),
-                                new Pose(9.500, 62.900)
+                                new Pose(57, 79.500),
+                                new Pose(18,84)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(143), Math.toRadians(140))
+                .setLinearHeadingInterpolation(Math.toRadians(143), Math.toRadians(180))
+                .build();
+        //path from 1st row of balls to shooting pos
+        Path8 = clanka
+                .pathBuilder()
+                .addPath(
+                        new BezierCurve(
+                                new Pose(18,84),
+                                new Pose(59, 76.7)
+                        )
+                )
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(143))
+                .build();
+        //path from shooting pos to third row of balls
+        Path9 = clanka
+                .pathBuilder()
+                .addPath(
+                        new BezierCurve(
+                                new Pose(59, 76.7),
+                                new Pose(60, 30),
+                                new Pose(18, 38)
+                        )
+                )
+                .setLinearHeadingInterpolation(Math.toRadians(143), Math.toRadians(180))
                 .build();
 
-        Path6 = clanka
+        Path10 = clanka
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(9.500, 62.900),
-                                new Pose(55.800,79.500)
+                                new Pose(18, 38),
+                                new Pose(40, 40),
+                                new Pose(57, 79.500)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(140), Math.toRadians(143))
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(143))
                 .build();
 
         Path11 = clanka
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(55.800,79.500),
+                                new Pose(57, 79.500),
                                 new Pose(40, 79.500)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(143), Math.toRadians(143))
                 .build();
+
+
     }
 
     @Override
@@ -297,7 +321,7 @@ public class ILTclassifierBlue extends NextFTCOpMode {
     @Override
     public void onUpdate() {
         clanka.update();
-
+        time = opmodeTimer.getElapsedTimeSeconds();
         theta = H2(calcDigger());
         ticks = tickAdjustment(calcDigger());
         controller.setGoal(new KineticState(-ticks));
@@ -321,8 +345,32 @@ public class ILTclassifierBlue extends NextFTCOpMode {
         panelsTelemetry.debug("Optimal Hood Angle", H2(calcDigger()));
         panelsTelemetry.debug("Ticks", tickAdjustment(calcDigger()));
 //        panelsTelemetry.debug("Velocityyuh", outtakeSubsystem.INSTANCE.getJawn());
+        panelsTelemetry.debug("Timer", time);
+
         panelsTelemetry.debug("X", goalX);
         panelsTelemetry.update(telemetry);
+
+        if (time >= 5 && !subtracted5) {
+            goalX -= 2;
+            subtracted5 = true;
+        }
+
+        // One-shot logic for 10 seconds
+        if (time >= 15 && !subtracted10) {
+            goalX -= 3;
+            subtracted10 = true;
+        }
+
+        if (time >= 17 && !subtracted17) {
+            goalX -= 1;
+            subtracted17 = true;
+        }
+
+        // One-shot logic for 15 seconds
+        if (time >= 20 && !subtracted15) {
+            goalX -= 2;
+            subtracted15 = true;
+        }
     }
 
 
@@ -376,7 +424,7 @@ public class ILTclassifierBlue extends NextFTCOpMode {
     Command decreaseX = new LambdaCommand()
             .setStart(() -> {
                 goalX -= 0.5;
-    })
+            })
             .setIsDone(() -> true)
             .requires(this)
             .named("decreaseX");

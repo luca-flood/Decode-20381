@@ -20,7 +20,10 @@ import dev.nextftc.core.components.SubsystemComponent;
 import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.ftc.components.BulkReadComponent;
 import com.pedropathing.util.Timer;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
+
+@Disabled
 @Autonomous(name = "Gooner2 BLUE")
 public class Meet1Auton2Blue extends NextFTCOpMode {
 

@@ -8,6 +8,7 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.hoodSubsystem;
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.intakeSubsystem;
@@ -20,6 +21,7 @@ import dev.nextftc.core.commands.groups.SequentialGroup;
 import dev.nextftc.core.components.SubsystemComponent;
 import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.ftc.components.BulkReadComponent;
+@Disabled
 
 @Autonomous(name = "Gooner2 RED")
 public class Meet1Auton2Red extends NextFTCOpMode {
