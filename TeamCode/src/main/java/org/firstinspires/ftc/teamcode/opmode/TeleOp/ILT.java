@@ -66,7 +66,7 @@ public class ILT extends NextFTCOpMode {
 
     // turret vars
 
-    boolean turretTracking = false;
+    boolean turretTracking = true;
 
     double fx = 626.909;
     double fy = 626.909;
@@ -121,6 +121,9 @@ public class ILT extends NextFTCOpMode {
     double yDiff = 0;
     double limelightX = 0;
     double limelightY = 0;
+    double angleOffset = 260;
+
+    Boolean limelightTracking = false;
 
     CRServoEx liftL;
     CRServoEx liftR;
@@ -270,7 +273,7 @@ public class ILT extends NextFTCOpMode {
         controller.setGoal(new KineticState(0.0));
 
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
-        limelight.pipelineSwitch(3);
+        limelight.pipelineSwitch(0);
         telemetry.setMsTransmissionInterval(2);
 
         targetVel = 0;
@@ -317,23 +320,38 @@ public class ILT extends NextFTCOpMode {
         while (globalCameraYaw > 180)  globalCameraYaw -= 360;
         while (globalCameraYaw <= -180) globalCameraYaw += 360;
 
-        robotYaw = -imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+        robotYaw = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
 
         double turretYaw = turret.getCurrentPosition() / ticksToDegrees;
 
     //    double totalYaw = Math.toDegrees(heading) + turretYaw;
-        robotHeadingDegrees = Math.toDegrees(clanka.getHeading());
+        robotHeadingDegrees = Math.toDegrees(heading);
 
-        double globalCameraYaw = robotHeadingDegrees + turretYaw - 90.0 ;
+        double globalCameraYaw = robotHeadingDegrees - turretYaw - angleOffset;
 
-        limelight.updateRobotOrientation(globalCameraYaw);
+        if (globalCameraYaw < -180) {
+            globalCameraYaw += 360;
+        }
+        else if (globalCameraYaw > 180) {
+            globalCameraYaw -= 360;
+        }
+
+        if (angleOffset > 270) {
+            angleOffset = 270;
+        }
+        else if (angleOffset < 260) {
+            angleOffset = 260;
+        }
+
+//        limelight.updateRobotOrientation(globalCameraYaw);
 
         // ll digga
         LLResult result = limelight.getLatestResult();
         boolean tagFound = (result != null && result.isValid());
 
         if (tagFound) {
-            Pose3D botpose = result.getBotpose_MT2();
+            Pose3D botpose = result.getBotpose();
+            yaw = result.getTx();
 
             visionX = (botpose.getPosition().x * 39.3701) +72; //ll center is (0,0) but pedro center is (72, 72)
             visionY = (botpose.getPosition().y * 39.3701) +72;
@@ -357,13 +375,14 @@ public class ILT extends NextFTCOpMode {
 //
         } else {
             // field-based distance calculation
+            yaw = 0;
             distance = Math.sqrt(Math.pow((blueX - clankerX), 2) + Math.pow((blueY - clankerY), 2)) + offset;
         }
 
         // turret maxxing
         theta = H2(calcDigger());
         ticks = tickAdjustment(calcDigger());
-        controller.setGoal(new KineticState(-ticks));
+        controller.setGoal(new KineticState(-ticks + yaw * (130.0 / 36.0) * (384.5 / 360.0)));
         //toggled by a
         if (turretTracking) {
             KineticState currentState = new KineticState(turret.getCurrentPosition(), turret.getVelocity());
@@ -399,45 +418,54 @@ public class ILT extends NextFTCOpMode {
             intakeSubsystem.INSTANCE.sleep.schedule();
         }
 
-        if (gamepad1.a) {
-            if (turretTracking) {
-                turretTracking = false;
-            } else {
-                turretTracking = true;
-            }
-        }
+//        if (gamepad1.a) {
+//            if (turretTracking) {
+//                turretTracking = false;
+//            } else {
+//                turretTracking = true;
+//            }
+//        }
+
+//        if (gamepad1.dpad_up) {
+//            liftL.setPower(1);
+//            liftR.setPower(-1);
+//        } else if (gamepad1.dpad_down) {
+//            liftL.setPower(-1);
+//            liftR.setPower(1);
+//        } else {
+//            liftL.setPower(0);
+//            liftR.setPower(0);
+//        }
 
         if (gamepad1.dpad_up) {
-            liftL.setPower(1);
-            liftR.setPower(-1);
-        } else if (gamepad1.dpad_down) {
-            liftL.setPower(-1);
-            liftR.setPower(1);
-        } else {
-            liftL.setPower(0);
-            liftR.setPower(0);
+            limelightTracking = !limelightTracking;
         }
-        telemetry.addLine("--- YAW DIAGNOSTICS ---");
-        telemetry.addData("1. Raw IMU (Negated)", robotHeadingDegrees);
-        telemetry.addData("2. Turret Degrees", turretYaw);
-        telemetry.addData("3. Combined Global Yaw", globalCameraYaw);
+//        if (gamepad1.dpad_down) {
+//            angleOffset -= 1;
+//        }
 
-        telemetry.addLine("--- COORDINATE CHECK ---");
-        telemetry.addData("Pedro Pose", "X: %.2f, Y: %.2f", clankerX, clankerY);
-        telemetry.addData("Vision Pose", "X: %.2f, Y: %.2f", visionX, visionY);
-        telemetry.addData("Difference", "X: %.2f, Y: %.2f", xDiff, yDiff);
-
-        telemetry.addLine("--- VISUAL SYNC TEST ---");
-        telemetry.addData("Action", (globalCameraYaw > -5 && globalCameraYaw < 5) ? "LOOKING AT RED WALL" :
-                (globalCameraYaw > 85 && globalCameraYaw < 95) ? "LOOKING AT BLUE DEPOT" : "ROTATING...");
+//        telemetry.addLine("--- YAW DIAGNOSTICS ---");
+//        telemetry.addData("1. Raw IMU", robotYaw);
+//        telemetry.addData("2. Turret Degrees", turretYaw);
+//        telemetry.addData("3. Combined Global Yaw", globalCameraYaw);
+//        telemetry.addData("4. Offset Value", angleOffset);
+//
+//        telemetry.addLine("--- COORDINATE CHECK ---");
+//        telemetry.addData("Pedro Pose", "X: %.2f, Y: %.2f", clankerX, clankerY);
+//        telemetry.addData("Vision Pose", "X: %.2f, Y: %.2f", visionX, visionY);
+//        telemetry.addData("Difference", "X: %.2f, Y: %.2f", xDiff, yDiff);
+//
+//        telemetry.addLine("--- VISUAL SYNC TEST ---");
+//        telemetry.addData("Action", (globalCameraYaw > -5 && globalCameraYaw < 5) ? "LOOKING AT RED WALL" :
+//                (globalCameraYaw > 85 && globalCameraYaw < 95) ? "LOOKING AT BLUE DEPOT" : "ROTATING...");
 
         // telemetry
-//        telemetry.addData("Distance", distance);
-//        telemetry.addData("Tag Found", tagFound);
-//        telemetry.addData("Turret Pos", turret.getCurrentPosition());
-//        //  telemetry.addData("Degree Offset (Limelight)", yaw);
-//        //  telemetry.addData("Degree Offset (Kinematics)", theta);
-//        telemetry.addData("Target Ticks", -ticks);
+        telemetry.addData("Distance", distance);
+        telemetry.addData("Tag Found", tagFound);
+        telemetry.addData("Turret Pos", turret.getCurrentPosition());
+        telemetry.addData("Degree Offset (Limelight)", yaw);
+        telemetry.addData("Degree Offset (Kinematics)", theta);
+        telemetry.addData("Target Ticks", -ticks);
 //        telemetry.addData("Optimal Velo", getVel(distance));
 //        //  telemetry.addData("Camera Status", portal.getCameraState());
 //        telemetry.addData("Hood Angle", hoodSubsystem.INSTANCE.getDaddy());
