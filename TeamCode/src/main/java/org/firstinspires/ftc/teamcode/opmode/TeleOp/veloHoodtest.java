@@ -46,11 +46,11 @@ public class veloHoodtest extends NextFTCOpMode {
         return 75.16142 * Math.pow(ta, -0.47932);
     }
     public double getHoodAngle(double distance) {
-        return 0.00578881 * distance - 0.00802588;
+        return (distance >= 120) ? -0.0210202 * distance +3.48553 : 0.00578881 * distance - 0.00802588;
     }
 
     public double getVelocity(double distance) {
-        return 10.81866 * distance + 1084.95409;
+        return (distance >= 120) ? 19.17589 * distance -582.51652 : 10.81866 * distance + 1084.95409;
     }
     public veloHoodtest() {
 
@@ -216,6 +216,9 @@ public class veloHoodtest extends NextFTCOpMode {
 
         distance = Math.sqrt(Math.pow((blueX - clankerX), 2) + Math.pow((blueY - clankerY), 2)) + offset;
 
+        targetVel = (running) ? getVel(distance) : 0;
+        targetHood = (running) ? getHood(distance) : 0;
+
         outtakeSubsystem.INSTANCE.setVel(targetVel).schedule();
         hoodSubsystem.INSTANCE.goon(targetHood).schedule();
 
@@ -244,15 +247,6 @@ public class veloHoodtest extends NextFTCOpMode {
         }
         if (gamepad1.left_trigger > 0.1) {
             running = false;
-        }
-
-        if (running) {
-            targetHood = getHood(distance);
-            targetVel = getVel(distance);
-        }
-        else {
-            targetHood = 0;
-            targetVel = 0;
         }
 
         if (gamepad1.a) {

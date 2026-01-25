@@ -6,6 +6,7 @@ import android.util.Size;
 
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
+import com.pedropathing.math.Vector;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
@@ -122,8 +123,15 @@ public class ILT extends NextFTCOpMode {
     double limelightX = 0;
     double limelightY = 0;
     double angleOffset = 260;
-
     Boolean limelightTracking = false;
+    boolean hasCorrectedLL = false;
+    double finalTargetTicks;
+    boolean far = false;
+    boolean readyShoot = false;
+
+    double robotVelocityMag = 0;
+    double robotVelocityXComp = 0;
+    double robotVelocityYComp = 0;
 
     CRServoEx liftL;
     CRServoEx liftR;
@@ -162,7 +170,7 @@ public class ILT extends NextFTCOpMode {
     }
 
     public double getVelocity(double dist) {
-        return 10.81866 * dist + 1084.95409;
+        return 10.99866 * dist + 1084.95409;
     }
 
     public double getVel(double dist) {
@@ -274,7 +282,7 @@ public class ILT extends NextFTCOpMode {
 
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.pipelineSwitch(0);
-        telemetry.setMsTransmissionInterval(2);
+        telemetry.setMsTransmissionInterval(1);
 
         targetVel = 0;
     }
@@ -314,91 +322,90 @@ public class ILT extends NextFTCOpMode {
         clankerX = clanka.getPose().getX();
         clankerY = clanka.getPose().getY();
 
-        xDiff = clankerX - limelightX;
-        yDiff = clankerY - limelightY;
-
-        while (globalCameraYaw > 180)  globalCameraYaw -= 360;
-        while (globalCameraYaw <= -180) globalCameraYaw += 360;
-
-        robotYaw = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
-
-        double turretYaw = turret.getCurrentPosition() / ticksToDegrees;
-
-    //    double totalYaw = Math.toDegrees(heading) + turretYaw;
-        robotHeadingDegrees = Math.toDegrees(heading);
-
-        double globalCameraYaw = robotHeadingDegrees - turretYaw - angleOffset;
-
-        if (globalCameraYaw < -180) {
-            globalCameraYaw += 360;
+        if(clankerY < 40){
+            far = true;
         }
-        else if (globalCameraYaw > 180) {
-            globalCameraYaw -= 360;
+        else{
+            far = false;
         }
 
-        if (angleOffset > 270) {
-            angleOffset = 270;
-        }
-        else if (angleOffset < 260) {
-            angleOffset = 260;
-        }
+        robotVelocityMag = clanka.getVelocity().getMagnitude();
+        robotVelocityXComp = clanka.getVelocity().getXComponent();
+        robotVelocityYComp = clanka.getVelocity().getMagnitude();
 
-//        limelight.updateRobotOrientation(globalCameraYaw);
+        if(Math.abs(robotVelocityMag) < 10){
+            readyShoot = true;
+        }
+        else{
+            readyShoot = false;
+        }
 
         // ll digga
         LLResult result = limelight.getLatestResult();
         boolean tagFound = (result != null && result.isValid());
 
-        if (tagFound) {
-            Pose3D botpose = result.getBotpose();
-            yaw = result.getTx();
 
-            visionX = (botpose.getPosition().x * 39.3701) +72; //ll center is (0,0) but pedro center is (72, 72)
-            visionY = (botpose.getPosition().y * 39.3701) +72;
-            // double visionHeading = Math.toRadians(botpose[5]);
+        distance = Math.sqrt(Math.pow((blueX - clankerX), 2) + Math.pow((blueY - clankerY), 2)) + offset;
 
-            xDiff = Math.abs(visionX - clankerX);
-            yDiff = Math.abs(visionY - clankerY);
-            //double distError = Math.hypot(xDiff, yDiff); //does pythagorean: accepts (x,y) outputs hypotenuse
-            double distError = (xDiff+ yDiff)/2; //does pythagorean: accepts (x,y) outputs hypotenuse
-
-            if (distError > 5) { //2.5 = difference threshold(if diff greater than 2.5, use ll to relocalize)
-                // we set the robot's pose to the vision system's estimate
-                // pitch and roll are ignored(0, 0)
-                Pose correctedPose = new Pose(clankerX, clankerY, heading); //pose constructor accepts(x, y, heading)
-                clanka.setPose(correctedPose);
-
-                // update references
-                limelightX = visionX;
-                limelightY = visionY;
+        if(readyShoot)
+            if (!hasCorrectedLL) {
+                if(tagFound){
+                    yaw = result.getTx();
+                    double relativeTickOffset = yaw * ticksToDegrees;
+                    finalTargetTicks = turret.getCurrentPosition() + relativeTickOffset;
+                    hasCorrectedLL = true;
+                 }
+                else {
+                    theta = H2(calcDigger());
+                    ticks = tickAdjustment(calcDigger());
+                    finalTargetTicks = -ticks;
+                 }
             }
-//
-        } else {
-            // field-based distance calculation
-            yaw = 0;
-            distance = Math.sqrt(Math.pow((blueX - clankerX), 2) + Math.pow((blueY - clankerY), 2)) + offset;
-        }
-
-        // turret maxxing
-        theta = H2(calcDigger());
-        ticks = tickAdjustment(calcDigger());
-        controller.setGoal(new KineticState(-ticks + yaw * (130.0 / 36.0) * (384.5 / 360.0)));
-        //toggled by a
-        if (turretTracking) {
-            KineticState currentState = new KineticState(turret.getCurrentPosition(), turret.getVelocity());
-            double turretPower = controller.calculate(currentState);
-            turret.setPower(turretPower);
-        } else { //on opposite toggle, set pos to 0
-            turret.setCurrentPosition(0);
+        else {
+            theta = H2(calcDigger());
+            ticks = tickAdjustment(calcDigger());
+            finalTargetTicks = -ticks;
+            hasCorrectedLL = false;
         }
 
         // subsystem automation velo+hood
         if (gamepad1.right_trigger > 0.1) {
-            outtakeSubsystem.INSTANCE.setVel(getVel(distance)).schedule();
-        } else {
+            if(!far){
+                outtakeSubsystem.INSTANCE.setVel(getVel(distance)).schedule();
+            }
+            else{
+                outtakeSubsystem.INSTANCE.setVel(2400).schedule();
+            }
+        }
+        else{
             outtakeSubsystem.INSTANCE.off().schedule();
         }
-        hoodSubsystem.INSTANCE.goon(getHood(distance)).schedule();
+
+        if (gamepad1.a) {
+            turretTracking = !turretTracking;
+        }
+
+        if (turretTracking) {
+            controller.setGoal(new KineticState(finalTargetTicks));
+        } else {
+            //on opposite toggle, set pos to 0
+            controller.setGoal(new KineticState(0));
+        }
+
+        KineticState currentState = new KineticState(turret.getCurrentPosition(), turret.getVelocity());
+        double turretPower = controller.calculate(currentState);
+
+        if(!far){
+            hoodSubsystem.INSTANCE.goon(getHood(distance)).schedule();
+        }else{
+            hoodSubsystem.INSTANCE.goon(0.15).schedule();
+        }
+
+        if (!turretTracking && Math.abs(turret.getCurrentPosition()) < 5) {
+            turret.setPower(0);
+        } else {
+            turret.setPower(turretPower);
+        }
 
         // intake digger
         if (gamepad1.left_bumper) {
@@ -418,24 +425,17 @@ public class ILT extends NextFTCOpMode {
             intakeSubsystem.INSTANCE.sleep.schedule();
         }
 
-//        if (gamepad1.a) {
-//            if (turretTracking) {
-//                turretTracking = false;
-//            } else {
-//                turretTracking = true;
-//            }
-//        }
 
-//        if (gamepad1.dpad_up) {
-//            liftL.setPower(1);
-//            liftR.setPower(-1);
-//        } else if (gamepad1.dpad_down) {
-//            liftL.setPower(-1);
-//            liftR.setPower(1);
-//        } else {
-//            liftL.setPower(0);
-//            liftR.setPower(0);
-//        }
+        if (gamepad1.dpad_up) {
+            liftL.setPower(1);
+            liftR.setPower(-1);
+        } else if (gamepad1.dpad_down) {
+            liftL.setPower(-1);
+            liftR.setPower(1);
+        } else {
+            liftL.setPower(0);
+            liftR.setPower(0);
+        }
 
         if (gamepad1.dpad_up) {
             limelightTracking = !limelightTracking;
@@ -466,6 +466,7 @@ public class ILT extends NextFTCOpMode {
         telemetry.addData("Degree Offset (Limelight)", yaw);
         telemetry.addData("Degree Offset (Kinematics)", theta);
         telemetry.addData("Target Ticks", -ticks);
+        telemetry.addData("robotVelocity", clanka.getVelocity());
 //        telemetry.addData("Optimal Velo", getVel(distance));
 //        //  telemetry.addData("Camera Status", portal.getCameraState());
 //        telemetry.addData("Hood Angle", hoodSubsystem.INSTANCE.getDaddy());
