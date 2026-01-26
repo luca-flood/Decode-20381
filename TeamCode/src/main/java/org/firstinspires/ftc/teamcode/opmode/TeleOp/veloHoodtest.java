@@ -46,11 +46,11 @@ public class veloHoodtest extends NextFTCOpMode {
         return 75.16142 * Math.pow(ta, -0.47932);
     }
     public double getHoodAngle(double distance) {
-        return (distance >= 120) ? -0.0210202 * distance +3.48553 : 0.00578881 * distance - 0.00802588;
+        return (distance >= 148.01468) ? -0.0210202 * distance + 3.48553 : 0.00578881 * distance - 0.00802588;
     }
 
     public double getVelocity(double distance) {
-        return (distance >= 120) ? 19.17589 * distance - 582.51652 : 10.81866 * distance + 1084.95409;
+        return (distance >= 148.01468) ? 19.17589 * distance - 582.51652 : 10.81866 * distance + 1084.95409;
     }
     public veloHoodtest() {
 
@@ -216,8 +216,8 @@ public class veloHoodtest extends NextFTCOpMode {
 
         distance = Math.sqrt(Math.pow((blueX - clankerX), 2) + Math.pow((blueY - clankerY), 2)) + offset;
 
-        targetVel = (running) ? getVel(distance) : 0;
-        targetHood = (running) ? getHood(distance) : 0;
+        targetVel = (running) ? getVelocity(distance) : 0;
+        targetHood = (running) ? getHoodAngle(distance) : 0;
 
         outtakeSubsystem.INSTANCE.setVel(targetVel).schedule();
         hoodSubsystem.INSTANCE.goon(targetHood).schedule();
@@ -292,8 +292,8 @@ public class veloHoodtest extends NextFTCOpMode {
         telemetry.addData("Target Area", llresult.getTa());
         telemetry.addData("Distance (inches)", distance);
         telemetry.addData("Tag Found", tagFound);
-        telemetry.addData("Optimal Hood Angle", getHood(distance));
-        telemetry.addData("Optimal Velocity", getVel(distance));
+        telemetry.addData("Optimal Hood Angle", getHoodAngle(distance));
+        telemetry.addData("Optimal Velocity", getVelocity(distance));
         telemetry.addData("Bot X", clankerX);
         telemetry.addData("Bot Y", clankerY);
 
