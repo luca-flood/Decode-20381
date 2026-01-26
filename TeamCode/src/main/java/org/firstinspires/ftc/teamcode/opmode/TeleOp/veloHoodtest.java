@@ -50,7 +50,7 @@ public class veloHoodtest extends NextFTCOpMode {
     }
 
     public double getVelocity(double distance) {
-        return (distance >= 120) ? 19.17589 * distance -582.51652 : 10.81866 * distance + 1084.95409;
+        return (distance >= 120) ? 19.17589 * distance - 582.51652 : 10.81866 * distance + 1084.95409;
     }
     public veloHoodtest() {
 
