@@ -124,7 +124,7 @@ public class ILTnineClassifier extends NextFTCOpMode {
                                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
                                 outtakeSubsystem.INSTANCE.setVel(0)
                         ),
-                        new FollowPath(Path1)
+                        new FollowPath(Path1, true, 0.8)
                 ),
                 new ParallelGroup(
                         new FollowPath(Path2),

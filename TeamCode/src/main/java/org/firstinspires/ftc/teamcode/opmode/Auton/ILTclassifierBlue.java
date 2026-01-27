@@ -105,7 +105,7 @@ public class ILTclassifierBlue extends NextFTCOpMode {
                                 intakeSubsystem.INSTANCE.eat,
                                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga()
                         ),
-                        new FollowPath(Path1)
+                        new FollowPath(Path1, true, 0.8)
                 ),
                // outtakeSubsystem.INSTANCE.off(),
                 new ParallelGroup(
