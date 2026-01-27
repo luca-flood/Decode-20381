@@ -11,6 +11,7 @@ import com.pedropathing.util.Timer;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.hoodSubsystem;
@@ -37,9 +38,9 @@ import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.ftc.components.BulkReadComponent;
 import dev.nextftc.hardware.impl.MotorEx;
 
-
-@Autonomous(name = "Blue nine  Classifier", group = "dit shigger")
-public class ILTnineClassifier extends NextFTCOpMode {
+@Disabled
+@Autonomous(name = "Blue nine Goon Classifier", group = "dit shigger")
+public class ILTnineClassifierGoon extends NextFTCOpMode {
 
     private TelemetryManager panelsTelemetry; // Panels Telemetry instance
 
@@ -91,7 +92,7 @@ public class ILTnineClassifier extends NextFTCOpMode {
     double ticksToDegrees = (130.0 / 36.0) * (384.5 / 360.0);
 
 
-    public ILTnineClassifier() {
+    public ILTnineClassifierGoon() {
         addComponents(
                 BindingsComponent.INSTANCE,
                 new SubsystemComponent(
@@ -109,89 +110,89 @@ public class ILTnineClassifier extends NextFTCOpMode {
     private Command autonomousRoutine(){
         return new SequentialGroup(
                 intakeSubsystem.INSTANCE.eat,
-                outtakeSubsystem.INSTANCE.setVel(1580),
+                outtakeSubsystem.INSTANCE.setVel(getVelocity(distance)),
                 new ParallelGroup(
                         new SequentialGroup(
                                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
                                 intakeSubsystem.INSTANCE.eat,
-                                hoodSubsystem.INSTANCE.goon(.15),
-                                outtakeSubsystem.INSTANCE.setVel(2120),
+                                outtakeSubsystem.INSTANCE.setVel(getVelocity(distance)),
+                                hoodSubsystem.INSTANCE.goon(getHoodAngle(distance)),
                                 intakeSubsystem.INSTANCE.eat,
                                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
-                                hoodSubsystem.INSTANCE.goon(.15),
+                                hoodSubsystem.INSTANCE.goon(getHoodAngle(distance)),
                                 new Delay(0.1),
                                 intakeSubsystem.INSTANCE.eat,
-                                multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
-                                outtakeSubsystem.INSTANCE.setVel(0)
+                                multiFunctionSubsystem.INSTANCE.transpherSequencNiga()
                         ),
                         new FollowPath(Path1)
                 ),
                 new ParallelGroup(
                         new FollowPath(Path2),
-                        outtakeSubsystem.INSTANCE.setVel(1860),
-                        hoodSubsystem.INSTANCE.goon(.35)
+                        outtakeSubsystem.INSTANCE.setVel(getVelocity(distance)),
+                        hoodSubsystem.INSTANCE.goon(getHoodAngle(distance))
                 ),
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
-                hoodSubsystem.INSTANCE.goon(.35),
-                new Delay (0.25),
+                hoodSubsystem.INSTANCE.goon(getHoodAngle(distance)),
+                new Delay (0.2),
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
-                hoodSubsystem.INSTANCE.goon(.35),
-                new Delay (0.25),
+                hoodSubsystem.INSTANCE.goon(getHoodAngle(distance)),
+                new Delay (0.1),
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
-                hoodSubsystem.INSTANCE.goon(.29),
+                hoodSubsystem.INSTANCE.goon(getHoodAngle(distance)),
                 outtakeSubsystem.INSTANCE.setVel(0),
                 intakeSubsystem.INSTANCE.eat,
                 new FollowPath(Path3),
                 new Delay(1),
                 new ParallelGroup(
                         new FollowPath(Path4),
-                        outtakeSubsystem.INSTANCE.setVel(1860),
-                        hoodSubsystem.INSTANCE.goon(.35)
+                        outtakeSubsystem.INSTANCE.setVel(getVelocity(distance)),
+                        hoodSubsystem.INSTANCE.goon(getHoodAngle(distance))
                 ),
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
-                hoodSubsystem.INSTANCE.goon(.35),
-                new Delay (0.25),
+                hoodSubsystem.INSTANCE.goon(getHoodAngle(distance)),
+                new Delay (0.2),
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
-                hoodSubsystem.INSTANCE.goon(35),
-                new Delay (0.25),
+                hoodSubsystem.INSTANCE.goon(getHoodAngle(distance)),
+                new Delay (0.1),
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
-                hoodSubsystem.INSTANCE.goon(.29),
-                outtakeSubsystem.INSTANCE.setVel(1700),
+                hoodSubsystem.INSTANCE.goon(getHoodAngle(distance)),
+                outtakeSubsystem.INSTANCE.setVel(getVelocity(distance)),
                 intakeSubsystem.INSTANCE.eat,
                 new FollowPath(Path7),
                 new ParallelGroup(
                         new FollowPath(Path8),
-                        outtakeSubsystem.INSTANCE.setVel(1860),
-                        hoodSubsystem.INSTANCE.goon(.35)
+                        outtakeSubsystem.INSTANCE.setVel(getVelocity(distance)),
+                        hoodSubsystem.INSTANCE.goon(getHoodAngle(distance))
                 ),
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
-                hoodSubsystem.INSTANCE.goon(.35),
-                new Delay (0.25),
+                hoodSubsystem.INSTANCE.goon(getHoodAngle(distance)),
+                new Delay (0.2),
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
-                hoodSubsystem.INSTANCE.goon(.35),
-                new Delay (0.25),
+                hoodSubsystem.INSTANCE.goon(getHoodAngle(distance)),
+                new Delay (0.1),
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
-                hoodSubsystem.INSTANCE.goon(.29),
-                outtakeSubsystem.INSTANCE.setVel(1700),
+                hoodSubsystem.INSTANCE.goon(getHoodAngle(distance)),
+                outtakeSubsystem.INSTANCE.setVel(getVelocity(distance)),
                 intakeSubsystem.INSTANCE.eat,
-                outtakeSubsystem.INSTANCE.setVel(0),
                 new FollowPath(Path9),
                 new ParallelGroup(
                         new FollowPath(Path10),
-                        outtakeSubsystem.INSTANCE.setVel(1860),
-                        hoodSubsystem.INSTANCE.goon(.35)
+                        outtakeSubsystem.INSTANCE.setVel(getVelocity(distance)),
+                hoodSubsystem.INSTANCE.goon(getHoodAngle(distance))
                 ),
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
-                hoodSubsystem.INSTANCE.goon(.35),
-                new Delay (0.25),
+                hoodSubsystem.INSTANCE.goon(getHoodAngle(distance)),
+                new Delay (0.2),
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
-                hoodSubsystem.INSTANCE.goon(35),
-                new Delay (0.25),
+                hoodSubsystem.INSTANCE.goon(getHoodAngle(distance)),
+                new Delay (0.1),
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
-                hoodSubsystem.INSTANCE.goon(.29),
+                hoodSubsystem.INSTANCE.goon(getHoodAngle(distance)),
                 outtakeSubsystem.INSTANCE.setVel(0),
                 intakeSubsystem.INSTANCE.sleep,
                 new FollowPath(Path11)
+
+
         );
     }
 
@@ -327,13 +328,23 @@ public class ILTnineClassifier extends NextFTCOpMode {
 
     @Override
     public void onStartButtonPressed() {
-        limelight.start();
+        opmodeTimer.resetTimer();
+
         autonomousRoutine().schedule();
     }
 
     @Override
     public void onUpdate() {
         clanka.update();
+        time = opmodeTimer.getElapsedTimeSeconds();
+        theta = H2(calcDigger());
+        ticks = tickAdjustment(calcDigger());
+        controller.setGoal(new KineticState(-ticks));
+
+        KineticState currentState = new KineticState(turret.getCurrentPosition(), turret.getVelocity());
+        double turretPower = controller.calculate(currentState);
+        turret.setPower(turretPower);
+
         clankerX = clanka.getPose().getX();
         clankerY = clanka.getPose().getY();
         clankerR = clanka.getHeading();
@@ -346,7 +357,12 @@ public class ILTnineClassifier extends NextFTCOpMode {
         robotVelocityXComp = clanka.getVelocity().getXComponent();
         robotVelocityYComp = clanka.getVelocity().getMagnitude();
 
-        readyShoot = Math.abs(robotVelocityMag) < 10;
+        if(Math.abs(robotVelocityMag) < 10){
+            readyShoot = true;
+        }
+        else{
+            readyShoot = false;
+        }
 
         // ll digga
         LLResult result = limelight.getLatestResult();
@@ -376,23 +392,18 @@ public class ILTnineClassifier extends NextFTCOpMode {
             hasCorrectedLL = false;
         }
 
-        controller.setGoal(new KineticState(finalTargetTicks));
-
-        KineticState currentState = new KineticState(turret.getCurrentPosition(), turret.getVelocity());
-        double turretPower = controller.calculate(currentState);
-        turret.setPower(turretPower);
-
         // Log values to Panels and Driver Station
         panelsTelemetry.debug("X", clanka.getPose().getX());
         panelsTelemetry.debug("Y", clanka.getPose().getY());
         panelsTelemetry.debug("Heading", clanka.getPose().getHeading() * 180 / Math.PI);
         panelsTelemetry.debug("Optimal Hood Angle", H2(calcDigger()));
         panelsTelemetry.debug("Ticks", tickAdjustment(calcDigger()));
-//        panelsTelemetry.debug("Velocityyuh", outtakeSubsystem.INSTANCE.getJawn());
-        panelsTelemetry.debug("Tag Found", tagFound);
-        panelsTelemetry.debug("Has Corrected", hasCorrectedLL);
-        panelsTelemetry.debug("Error", yaw);
-        panelsTelemetry.debug("Clanker Vel", robotVelocityMag);
+        panelsTelemetry.debug("Outtake Velo", getVelocity(distance));
+        panelsTelemetry.debug("Hood Angle", getHoodAngle(distance));
+        panelsTelemetry.debug("Velocityyuh", outtakeSubsystem.INSTANCE.getJawn());
+        panelsTelemetry.debug("Distance", distance);
+        panelsTelemetry.debug("Timer", time);
+
         panelsTelemetry.debug("X", goalX);
         panelsTelemetry.update(telemetry);
     }
@@ -430,18 +441,15 @@ public class ILTnineClassifier extends NextFTCOpMode {
         return 75.16142 * Math.pow(ta, -0.47932);
     }
     public double getHoodAngle(double distance) {
-        return 0.00578881 * distance - 0.00802588;
+        return (distance >= 148.01468) ? -0.0210202 * distance + 3.48553 : 0.00578881 * distance - 0.00802588;
     }
 
     public double getVelocity(double distance) {
-        return 10.81866 * distance + 1084.95409;
+        return (distance >= 148.01468) ? 19.17589 * distance - 582.51652 : 10.81866 * distance + 1084.95409;
     }
 
-    public double getVel(double dist) {
-        return 7.65268 * dist + 1123.06996;
-    }
-    public double getHood(double dist) {
-        return 71.71201 * Math.pow(dist, -1.17652);
+    public double roundToMultipleOf20() {
+        return 67;
     }
 
     public Command increaseX(){goalX += 0.5; return null; };

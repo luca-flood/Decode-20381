@@ -8,6 +8,7 @@ import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
+import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -67,6 +68,17 @@ public class ILTFarBlueMiddle extends NextFTCOpMode {
     double leftMax = 691;
     double rightMax = -809;
 
+    double robotVelocityMag = 0;
+    double robotVelocityXComp = 0;
+    double robotVelocityYComp = 0;
+
+    boolean limelightTracking = false;
+    boolean hasCorrectedLL = false;
+    double finalTargetTicks;
+    boolean far = false;
+    boolean readyShoot = false;
+    double ticksToDegrees = (130.0 / 36.0) * (384.5 / 360.0);
+
     public ILTFarBlueMiddle() {
         addComponents(
                 BindingsComponent.INSTANCE,
@@ -84,44 +96,44 @@ public class ILTFarBlueMiddle extends NextFTCOpMode {
 
     private Command autonomousRoutine() {
         return new SequentialGroup(
-                outtakeSubsystem.INSTANCE.setVel(2460),
+                outtakeSubsystem.INSTANCE.setVel(2440),
                 hoodSubsystem.INSTANCE.goon(.15),
-                intakeSubsystem.INSTANCE.eat,
+                intakeSubsystem.INSTANCE.slowSuck,
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
                 hoodSubsystem.INSTANCE.goon(.2),
-                new Delay(.25),
+                new Delay(.5),
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
-                new Delay(0.3),
+                new Delay(0.5),
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
                 intakeSubsystem.INSTANCE.sleep,
                 outtakeSubsystem.INSTANCE.setVel(0),
                 intakeSubsystem.INSTANCE.eat,
                 new FollowPath(Path1),
                 intakeSubsystem.INSTANCE.sleep,
-                new FollowPath(Path2),
-                outtakeSubsystem.INSTANCE.setVel(2460),
+                new FollowPath(Path2, true, 0.8),
+                outtakeSubsystem.INSTANCE.setVel(2440),
                 hoodSubsystem.INSTANCE.goon(.15),
-                intakeSubsystem.INSTANCE.eat,
+                intakeSubsystem.INSTANCE.slowSuck,
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
                 hoodSubsystem.INSTANCE.goon(.2),
-                new Delay(.25),
+                new Delay(.5),
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
-                new Delay(0.3),
+                new Delay(0.5),
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
                 intakeSubsystem.INSTANCE.sleep,
                 outtakeSubsystem.INSTANCE.setVel(0),
                 intakeSubsystem.INSTANCE.eat,
                 new FollowPath(Path3),
                 intakeSubsystem.INSTANCE.sleep,
-                new FollowPath(Path4),
-                outtakeSubsystem.INSTANCE.setVel(2460),
+                new FollowPath(Path4, true, 0.8),
+                outtakeSubsystem.INSTANCE.setVel(2440),
                 hoodSubsystem.INSTANCE.goon(.15),
-                intakeSubsystem.INSTANCE.eat,
+                intakeSubsystem.INSTANCE.slowSuck,
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
                 hoodSubsystem.INSTANCE.goon(.2),
-                new Delay(.25),
+                new Delay(.5),
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
-                new Delay(0.3),
+                new Delay(0.5),
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
                 intakeSubsystem.INSTANCE.sleep,
                 outtakeSubsystem.INSTANCE.setVel(0),
@@ -131,6 +143,7 @@ public class ILTFarBlueMiddle extends NextFTCOpMode {
 
     @Override
     public void onInit() {
+        transferSubsystem.INSTANCE.toNeutral.schedule();
         hoodSubsystem.INSTANCE.goon(0).schedule();
 
         clanka = PedroComponent.follower();
@@ -145,15 +158,19 @@ public class ILTFarBlueMiddle extends NextFTCOpMode {
         controller.setGoal(new KineticState(0.0));
 
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
-        clanka.setStartingPose(new Pose(50, 8, Math.toRadians(90)));
+        clanka.setStartingPose(new Pose(54, 8, Math.toRadians(90)));
 
         outtakeSubsystem.INSTANCE.off().schedule();
+
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        limelight.pipelineSwitch(0);
+        telemetry.setMsTransmissionInterval(1);
 
         Path1 = clanka.pathBuilder().addPath(
                         new BezierCurve(
                                 new Pose(56.000, 8.000),
-                                new Pose(92.285, 38.684),
-                                new Pose(24.631, 34.765)
+                                new Pose(96.285, 42.684),
+                                new Pose(20.631, 34.765)
                         )
                 ).setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(180))
 
@@ -172,8 +189,8 @@ public class ILTFarBlueMiddle extends NextFTCOpMode {
         Path3 = clanka.pathBuilder().addPath(
                         new BezierCurve(
                                 new Pose(55.707, 12.223),
-                                new Pose(75.955, 64.469),
-                                new Pose(24.129, 59.460)
+                                new Pose(77.955, 64.469),
+                                new Pose(20.129, 59.460)
                         )
                 ).setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(180))
 
@@ -191,7 +208,7 @@ public class ILTFarBlueMiddle extends NextFTCOpMode {
         Path5 = clanka
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(55.388, 10), new Pose(50.388, 40))
+                        new BezierLine(new Pose(55.388, 12), new Pose(50.388, 40))
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(90))
                 .build();
@@ -199,19 +216,13 @@ public class ILTFarBlueMiddle extends NextFTCOpMode {
 
     @Override
     public void onStartButtonPressed() {
+        limelight.start();
         autonomousRoutine().schedule();
     }
 
     @Override
     public void onUpdate() {
         clanka.update();
-        theta = H2(calcDigger());
-        ticks = tickAdjustment(calcDigger());
-        controller.setGoal(new KineticState(-ticks));
-
-        KineticState currentState = new KineticState(turret.getCurrentPosition(), turret.getVelocity());
-        double turretPower = controller.calculate(currentState);
-        turret.setPower(turretPower);
 
         clankerX = clanka.getPose().getX();
         clankerY = clanka.getPose().getY();
@@ -220,6 +231,52 @@ public class ILTFarBlueMiddle extends NextFTCOpMode {
 
         targetVel = getVel(distance);
         targetHood = getVel(distance);
+
+        robotVelocityMag = clanka.getVelocity().getMagnitude();
+        robotVelocityXComp = clanka.getVelocity().getXComponent();
+        robotVelocityYComp = clanka.getVelocity().getMagnitude();
+
+        readyShoot = Math.abs(robotVelocityMag) < 4;
+
+        // ll digga
+        LLResult result = limelight.getLatestResult();
+        boolean tagFound = (result != null && result.isValid());
+
+
+        distance = Math.sqrt(Math.pow((blueX - clankerX), 2) + Math.pow((blueY - clankerY), 2)) + offset;
+
+        if(readyShoot) {
+            if (!hasCorrectedLL) {
+                if (tagFound) {
+                    yaw = result.getTx();
+                    double relativeTickOffset = yaw * ticksToDegrees;
+                    finalTargetTicks = turret.getCurrentPosition() + relativeTickOffset;
+                    hasCorrectedLL = true;
+                } else {
+                    theta = H2(calcDigger());
+                    ticks = tickAdjustment(calcDigger());
+                    finalTargetTicks = -ticks;
+                }
+            }
+        }
+        else {
+            theta = H2(calcDigger());
+            ticks = tickAdjustment(calcDigger());
+            finalTargetTicks = -ticks;
+            hasCorrectedLL = false;
+        }
+
+        controller.setGoal(new KineticState(finalTargetTicks));
+
+        KineticState currentState = new KineticState(turret.getCurrentPosition(), turret.getVelocity());
+        double turretPower = controller.calculate(currentState);
+        turret.setPower(turretPower);
+
+        panelsTelemetry.debug("Tag Found", tagFound);
+        panelsTelemetry.debug("Has Corrected", hasCorrectedLL);
+        panelsTelemetry.debug("Error", yaw);
+        panelsTelemetry.debug("Clanker Vel", robotVelocityMag);
+        panelsTelemetry.update(telemetry);
     }
 
     public double normalize(double angle) {

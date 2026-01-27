@@ -123,7 +123,7 @@ public class ILT extends NextFTCOpMode {
     double limelightX = 0;
     double limelightY = 0;
     double angleOffset = 260;
-    Boolean limelightTracking = false;
+    boolean limelightTracking = false;
     boolean hasCorrectedLL = false;
     double finalTargetTicks;
     boolean far = false;
@@ -347,20 +347,20 @@ public class ILT extends NextFTCOpMode {
 
         distance = Math.sqrt(Math.pow((blueX - clankerX), 2) + Math.pow((blueY - clankerY), 2)) + offset;
 
-        if(readyShoot)
+        if(readyShoot) {
             if (!hasCorrectedLL) {
-                if(tagFound){
+                if (tagFound) {
                     yaw = result.getTx();
                     double relativeTickOffset = yaw * ticksToDegrees;
                     finalTargetTicks = turret.getCurrentPosition() + relativeTickOffset;
                     hasCorrectedLL = true;
-                 }
-                else {
+                } else {
                     theta = H2(calcDigger());
                     ticks = tickAdjustment(calcDigger());
                     finalTargetTicks = -ticks;
-                 }
+                }
             }
+        }
         else {
             theta = H2(calcDigger());
             ticks = tickAdjustment(calcDigger());

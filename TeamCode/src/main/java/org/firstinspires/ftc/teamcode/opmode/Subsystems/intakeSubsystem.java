@@ -13,6 +13,8 @@ public class intakeSubsystem implements Subsystem {
     public Command eat = new SetPower(intake, -1).requires(this);
     public Command slowSpit = new SetPower(intake, 0.5).requires(this);
 
+    public Command slowSuck = new SetPower(intake, -0.6).requires(this);
+
     public Command spit = new SetPower(intake, 1).requires(this);
 
     public Command sleep = new SetPower(intake, 0).requires(this);
