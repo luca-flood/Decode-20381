@@ -8,6 +8,7 @@ import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
+import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -33,7 +34,7 @@ import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.ftc.components.BulkReadComponent;
 import dev.nextftc.hardware.impl.MotorEx;
 
-@Autonomous(name = "ILTigga Far Bligga")
+@Autonomous(name = "ILT Blue 1 Far")
 public class ILTFarBlue extends NextFTCOpMode {
 
     private TelemetryManager panelsTelemetry; // Panels Telemetry instance
@@ -67,6 +68,17 @@ public class ILTFarBlue extends NextFTCOpMode {
     double leftMax = 691;
     double rightMax = -809;
 
+    double robotVelocityMag = 0;
+    double robotVelocityXComp = 0;
+    double robotVelocityYComp = 0;
+
+    boolean limelightTracking = false;
+    boolean hasCorrectedLL = false;
+    double finalTargetTicks;
+    boolean far = false;
+    boolean readyShoot = false;
+    double ticksToDegrees = (130.0 / 36.0) * (384.5 / 360.0);
+
     public ILTFarBlue() {
         addComponents(
                 BindingsComponent.INSTANCE,
@@ -86,7 +98,7 @@ public class ILTFarBlue extends NextFTCOpMode {
         return new SequentialGroup(
                 outtakeSubsystem.INSTANCE.setVel(2460),
                 hoodSubsystem.INSTANCE.goon(.15),
-                intakeSubsystem.INSTANCE.eat,
+                intakeSubsystem.INSTANCE.slowSuck,
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
                 hoodSubsystem.INSTANCE.goon(.2),
                 new Delay(.25),
@@ -101,7 +113,7 @@ public class ILTFarBlue extends NextFTCOpMode {
                 new FollowPath(Path2),
                 outtakeSubsystem.INSTANCE.setVel(2460),
                 hoodSubsystem.INSTANCE.goon(.15),
-                intakeSubsystem.INSTANCE.eat,
+                intakeSubsystem.INSTANCE.slowSuck,
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
                 hoodSubsystem.INSTANCE.goon(.2),
                 new Delay(.25),
@@ -134,6 +146,10 @@ public class ILTFarBlue extends NextFTCOpMode {
 
         outtakeSubsystem.INSTANCE.off().schedule();
 
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        limelight.pipelineSwitch(0);
+        telemetry.setMsTransmissionInterval(1);
+
         Path1 = clanka
                 .pathBuilder()
                 .addPath(
@@ -165,19 +181,13 @@ public class ILTFarBlue extends NextFTCOpMode {
 
     @Override
     public void onStartButtonPressed() {
+        limelight.start();
         autonomousRoutine().schedule();
     }
 
     @Override
     public void onUpdate() {
         clanka.update();
-        theta = H2(calcDigger());
-        ticks = tickAdjustment(calcDigger());
-        controller.setGoal(new KineticState(-ticks));
-
-        KineticState currentState = new KineticState(turret.getCurrentPosition(), turret.getVelocity());
-        double turretPower = controller.calculate(currentState);
-        turret.setPower(turretPower);
 
         clankerX = clanka.getPose().getX();
         clankerY = clanka.getPose().getY();
@@ -186,6 +196,52 @@ public class ILTFarBlue extends NextFTCOpMode {
 
         targetVel = getVel(distance);
         targetHood = getVel(distance);
+
+        robotVelocityMag = clanka.getVelocity().getMagnitude();
+        robotVelocityXComp = clanka.getVelocity().getXComponent();
+        robotVelocityYComp = clanka.getVelocity().getMagnitude();
+
+        readyShoot = Math.abs(robotVelocityMag) < 4;
+
+        // ll digga
+        LLResult result = limelight.getLatestResult();
+        boolean tagFound = (result != null && result.isValid());
+
+
+        distance = Math.sqrt(Math.pow((blueX - clankerX), 2) + Math.pow((blueY - clankerY), 2)) + offset;
+
+        if(readyShoot) {
+            if (!hasCorrectedLL) {
+                if (tagFound) {
+                    yaw = result.getTx();
+                    double relativeTickOffset = yaw * ticksToDegrees;
+                    finalTargetTicks = turret.getCurrentPosition() + relativeTickOffset;
+                    hasCorrectedLL = true;
+                } else {
+                    theta = H2(calcDigger());
+                    ticks = tickAdjustment(calcDigger());
+                    finalTargetTicks = -ticks;
+                }
+            }
+        }
+        else {
+            theta = H2(calcDigger());
+            ticks = tickAdjustment(calcDigger());
+            finalTargetTicks = -ticks;
+            hasCorrectedLL = false;
+        }
+
+        controller.setGoal(new KineticState(finalTargetTicks));
+
+        KineticState currentState = new KineticState(turret.getCurrentPosition(), turret.getVelocity());
+        double turretPower = controller.calculate(currentState);
+        turret.setPower(turretPower);
+
+        panelsTelemetry.debug("Tag Found", tagFound);
+        panelsTelemetry.debug("Has Corrected", hasCorrectedLL);
+        panelsTelemetry.debug("Error", yaw);
+        panelsTelemetry.debug("Clanker Vel", robotVelocityMag);
+        panelsTelemetry.update(telemetry);
     }
 
     public double normalize(double angle) {

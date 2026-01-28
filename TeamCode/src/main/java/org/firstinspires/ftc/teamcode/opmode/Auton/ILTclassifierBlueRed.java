@@ -8,7 +8,6 @@ import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
-import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -38,8 +37,8 @@ import dev.nextftc.ftc.components.BulkReadComponent;
 import dev.nextftc.hardware.impl.MotorEx;
 
 
-@Autonomous(name = "Blue nine  Classifier", group = "dit shigger")
-public class ILTnineClassifier extends NextFTCOpMode {
+@Autonomous(name = "Red Classifier Goon", group = "dit shigger")
+public class ILTclassifierBlueRed extends NextFTCOpMode {
 
     private TelemetryManager panelsTelemetry; // Panels Telemetry instance
 
@@ -67,32 +66,13 @@ public class ILTnineClassifier extends NextFTCOpMode {
     double theta;
     double ticks;
     Follower clanka;
-    double time = 0;
-
-    boolean subtracted5 = false;
-    boolean subtracted10 = false;
-    boolean subtracted15 = false;
-
-    boolean subtracted17 = false;
-
     Limelight3A limelight;
     double leftMax = 691;
     double rightMax = -809;
 
-    double robotVelocityMag = 0;
-    double robotVelocityXComp = 0;
-    double robotVelocityYComp = 0;
-    double endingX = 65;
-    double endingY = 80;
-    boolean limelightTracking = false;
-    boolean hasCorrectedLL = false;
-    double finalTargetTicks;
-    boolean far = false;
-    boolean readyShoot = false;
-    double ticksToDegrees = (130.0 / 36.0) * (384.5 / 360.0);
 
 
-    public ILTnineClassifier() {
+    public ILTclassifierBlueRed() {
         addComponents(
                 BindingsComponent.INSTANCE,
                 new SubsystemComponent(
@@ -122,84 +102,92 @@ public class ILTnineClassifier extends NextFTCOpMode {
                                 hoodSubsystem.INSTANCE.goon(.15),
                                 new Delay(0.1),
                                 intakeSubsystem.INSTANCE.eat,
-                                multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
-                                outtakeSubsystem.INSTANCE.setVel(0)
+                                multiFunctionSubsystem.INSTANCE.transpherSequencNiga()
                         ),
                         new FollowPath(Path1, true, 0.8)
                 ),
+               // outtakeSubsystem.INSTANCE.off(),
                 intakeSubsystem.INSTANCE.slowSuck,
                 new ParallelGroup(
-                        new FollowPath(Path2),
-                        outtakeSubsystem.INSTANCE.setVel(1860),
-                        hoodSubsystem.INSTANCE.goon(.35)
+                        (Command) new FollowPath(Path2),
+                        outtakeSubsystem.INSTANCE.setVel(1900),
+                        hoodSubsystem.INSTANCE.goon(.20)
+                        //ILTclassifierBlue.decreaseX()
                 ),
                 intakeSubsystem.INSTANCE.eat,
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
-                hoodSubsystem.INSTANCE.goon(.35),
-                new Delay (0.25),
-                multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
-                hoodSubsystem.INSTANCE.goon(.3),
+                hoodSubsystem.INSTANCE.goon(.33),
                 new Delay (0.2),
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
+                hoodSubsystem.INSTANCE.goon(31),
+                new Delay (0.1),
+                multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
                 hoodSubsystem.INSTANCE.goon(.29),
-                outtakeSubsystem.INSTANCE.setVel(0),
+                outtakeSubsystem.INSTANCE.setVel(1700),
                 intakeSubsystem.INSTANCE.slowSuck,
                 new FollowPath(Path3),
                 new Delay(1),
+
                 new ParallelGroup(
                         new FollowPath(Path4),
-                        outtakeSubsystem.INSTANCE.setVel(1860),
-                        hoodSubsystem.INSTANCE.goon(.35)
+                        outtakeSubsystem.INSTANCE.setVel(1900),
+                        hoodSubsystem.INSTANCE.goon(.20)
                 ),
                 intakeSubsystem.INSTANCE.eat,
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
-                hoodSubsystem.INSTANCE.goon(.35),
-                new Delay (0.25),
-                multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
-                hoodSubsystem.INSTANCE.goon(3),
+                hoodSubsystem.INSTANCE.goon(.36),
                 new Delay (0.2),
+                multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
+                hoodSubsystem.INSTANCE.goon(31),
+                new Delay (0.1),
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
                 hoodSubsystem.INSTANCE.goon(.29),
                 outtakeSubsystem.INSTANCE.setVel(1700),
                 intakeSubsystem.INSTANCE.slowSuck,
-                new FollowPath(Path7),
-                intakeSubsystem.INSTANCE.slowSuck,
+                new FollowPath(Path3),
+                new Delay(1),
+
                 new ParallelGroup(
-                        new FollowPath(Path8),
-                        outtakeSubsystem.INSTANCE.setVel(1860),
-                        hoodSubsystem.INSTANCE.goon(.35)
+                        new FollowPath(Path4),
+                        outtakeSubsystem.INSTANCE.setVel(1900),
+                        hoodSubsystem.INSTANCE.goon(.20)
                 ),
                 intakeSubsystem.INSTANCE.eat,
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
-                hoodSubsystem.INSTANCE.goon(.35),
-                new Delay (0.25),
-                multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
-                hoodSubsystem.INSTANCE.goon(.3),
+                hoodSubsystem.INSTANCE.goon(.36),
                 new Delay (0.2),
+                multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
+                hoodSubsystem.INSTANCE.goon(31),
+                new Delay (0.1),
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
                 hoodSubsystem.INSTANCE.goon(.29),
                 outtakeSubsystem.INSTANCE.setVel(1700),
                 intakeSubsystem.INSTANCE.slowSuck,
-                outtakeSubsystem.INSTANCE.setVel(0),
-                new FollowPath(Path9),
-                intakeSubsystem.INSTANCE.slowSuck,
+                new FollowPath(Path5),
+                new Delay(1),
                 new ParallelGroup(
-                        new FollowPath(Path10),
-                        outtakeSubsystem.INSTANCE.setVel(1860),
-                        hoodSubsystem.INSTANCE.goon(.35)
+                    new FollowPath(Path6),
+                    outtakeSubsystem.INSTANCE.setVel(1900),
+                    hoodSubsystem.INSTANCE.goon(.20)
                 ),
                 intakeSubsystem.INSTANCE.eat,
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
-                hoodSubsystem.INSTANCE.goon(.35),
-                new Delay (0.25),
-                multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
-                hoodSubsystem.INSTANCE.goon(3),
+                hoodSubsystem.INSTANCE.goon(.36),
                 new Delay (0.2),
+                multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
+                hoodSubsystem.INSTANCE.goon(31),
+                new Delay (0.1),
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
                 hoodSubsystem.INSTANCE.goon(.29),
                 outtakeSubsystem.INSTANCE.setVel(0),
                 intakeSubsystem.INSTANCE.sleep,
                 new FollowPath(Path11)
+
+
+//                intakeSubsystem.INSTANCE.sleep
+//                new FollowPath(Path2),
+//                new FollowPath(Path3)
+
         );
     }
 
@@ -224,11 +212,8 @@ public class ILTnineClassifier extends NextFTCOpMode {
         outtakeSubsystem.INSTANCE.off().schedule();
         outtakeSubsystem.INSTANCE.noPower().schedule();
         opmodeTimer = new Timer();
-        //opmodeTimer.resetTimer();
+        opmodeTimer.resetTimer();
 
-        limelight = hardwareMap.get(Limelight3A.class, "limelight");
-        limelight.pipelineSwitch(0);
-        telemetry.setMsTransmissionInterval(1);
 
         Path1 = clanka
                 .pathBuilder()
@@ -245,7 +230,7 @@ public class ILTnineClassifier extends NextFTCOpMode {
         Path2 = clanka
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(20.800, 63.800), new Pose(endingX, endingY))
+                        new BezierLine(new Pose(20.800, 63.800), new Pose(58.800, 79.000))
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(143))
                 .build();
@@ -254,7 +239,7 @@ public class ILTnineClassifier extends NextFTCOpMode {
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(58.800, 75.000),
+                                new Pose(58.800, 79.000),
                                 new Pose(15.000, 60.000),
                                 new Pose(9.500, 62.670)
                         )
@@ -266,83 +251,65 @@ public class ILTnineClassifier extends NextFTCOpMode {
                 .addPath(
                         new BezierCurve(
                                 new Pose(9.500, 62.670),
-                                new Pose(endingX, endingY)
+                                new Pose(55.800, 79.500)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(140), Math.toRadians(143))
                 .build();
 
-        //path to grab 1st row of balls
-        Path7 = clanka
+        Path5 = clanka
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(57, 79.500),
-                                new Pose(18,84)
+                                new Pose(55.800, 79.500),
+                                new Pose(9.500, 62.900)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(143), Math.toRadians(180))
-                .build();
-        //path from 1st row of balls to shooting pos
-        Path8 = clanka
-                .pathBuilder()
-                .addPath(
-                        new BezierCurve(
-                                new Pose(18,84),
-                                new Pose(endingX, endingY)
-                        )
-                )
-                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(143))
-                .build();
-        //path from shooting pos to third row of balls
-        Path9 = clanka
-                .pathBuilder()
-                .addPath(
-                        new BezierCurve(
-                                new Pose(59, 76.7),
-                                new Pose(60, 30),
-                                new Pose(18, 38)
-                        )
-                )
-                .setLinearHeadingInterpolation(Math.toRadians(143), Math.toRadians(180))
+                .setLinearHeadingInterpolation(Math.toRadians(143), Math.toRadians(140))
                 .build();
 
-        Path10 = clanka
+        Path6 = clanka
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(18, 38),
-                                new Pose(40, 40),
-                                new Pose(endingX, endingY)
+                                new Pose(9.500, 62.900),
+                                new Pose(55.800,79.500)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(143))
+                .setLinearHeadingInterpolation(Math.toRadians(140), Math.toRadians(143))
                 .build();
 
         Path11 = clanka
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(57, 79.500),
+                                new Pose(55.800,79.500),
                                 new Pose(40, 79.500)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(143), Math.toRadians(143))
                 .build();
-
-
     }
 
     @Override
     public void onStartButtonPressed() {
-        limelight.start();
         opmodeTimer.resetTimer();
+
         autonomousRoutine().schedule();
     }
 
     @Override
     public void onUpdate() {
         clanka.update();
+
+        theta = H2(calcDigger());
+        ticks = tickAdjustment(calcDigger());
+        controller.setGoal(new KineticState(-ticks));
+
+        KineticState currentState = new KineticState(turret.getCurrentPosition(), turret.getVelocity());
+        double turretPower = controller.calculate(currentState);
+        turret.setPower(turretPower);
+
         clankerX = clanka.getPose().getX();
         clankerY = clanka.getPose().getY();
         clankerR = clanka.getHeading();
@@ -351,51 +318,6 @@ public class ILTnineClassifier extends NextFTCOpMode {
 
         BindingManager.update();
 
-        robotVelocityMag = clanka.getVelocity().getMagnitude();
-        robotVelocityXComp = clanka.getVelocity().getXComponent();
-        robotVelocityYComp = clanka.getVelocity().getMagnitude();
-
-        readyShoot = Math.abs(robotVelocityMag) < 10;
-
-        // ll digga
-        LLResult result = limelight.getLatestResult();
-        boolean tagFound = (result != null && result.isValid());
-
-
-        distance = Math.sqrt(Math.pow((blueX - clankerX), 2) + Math.pow((blueY - clankerY), 2)) + offset;
-
-        if(readyShoot) {
-            if (!hasCorrectedLL) {
-                if (tagFound) {
-                    yaw = result.getTx();
-                    double relativeTickOffset = yaw * ticksToDegrees;
-                    finalTargetTicks = turret.getCurrentPosition() + relativeTickOffset;
-                    hasCorrectedLL = true;
-                } else {
-                    theta = H2(calcDigger());
-                    ticks = tickAdjustment(calcDigger());
-                    finalTargetTicks = -ticks;
-                }
-            }
-        }
-        else {
-            theta = H2(calcDigger());
-            ticks = tickAdjustment(calcDigger());
-            finalTargetTicks = -ticks;
-            hasCorrectedLL = false;
-        }
-
-        if (opmodeTimer.getElapsedTimeSeconds() > 3) {
-            finalTargetTicks = 0;
-        }
-
-        controller.setGoal(new KineticState(finalTargetTicks));
-
-
-        KineticState currentState = new KineticState(turret.getCurrentPosition(), turret.getVelocity());
-        double turretPower = controller.calculate(currentState);
-        turret.setPower(turretPower);
-
         // Log values to Panels and Driver Station
         panelsTelemetry.debug("X", clanka.getPose().getX());
         panelsTelemetry.debug("Y", clanka.getPose().getY());
@@ -403,10 +325,6 @@ public class ILTnineClassifier extends NextFTCOpMode {
         panelsTelemetry.debug("Optimal Hood Angle", H2(calcDigger()));
         panelsTelemetry.debug("Ticks", tickAdjustment(calcDigger()));
 //        panelsTelemetry.debug("Velocityyuh", outtakeSubsystem.INSTANCE.getJawn());
-        panelsTelemetry.debug("Tag Found", tagFound);
-        panelsTelemetry.debug("Has Corrected", hasCorrectedLL);
-        panelsTelemetry.debug("Error", yaw);
-        panelsTelemetry.debug("Clanker Vel", robotVelocityMag);
         panelsTelemetry.debug("X", goalX);
         panelsTelemetry.update(telemetry);
     }
@@ -462,7 +380,7 @@ public class ILTnineClassifier extends NextFTCOpMode {
     Command decreaseX = new LambdaCommand()
             .setStart(() -> {
                 goalX -= 0.5;
-            })
+    })
             .setIsDone(() -> true)
             .requires(this)
             .named("decreaseX");

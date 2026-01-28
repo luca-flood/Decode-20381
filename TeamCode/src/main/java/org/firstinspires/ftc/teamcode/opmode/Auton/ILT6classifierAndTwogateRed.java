@@ -38,8 +38,8 @@ import dev.nextftc.ftc.components.BulkReadComponent;
 import dev.nextftc.hardware.impl.MotorEx;
 
 @Disabled
-@Autonomous(name = "Blue 6 classifier+2gate", group = "dit shigger")
-public class ILT6classifierAndTwogate extends NextFTCOpMode {
+@Autonomous(name = "Red 6 classifier+2gate", group = "dit shigger")
+public class ILT6classifierAndTwogateRed extends NextFTCOpMode {
         private TelemetryManager panelsTelemetry; // Panels Telemetry instance
 
         private Timer pathTimer, actionTimer, opmodeTimer;
@@ -83,7 +83,7 @@ public class ILT6classifierAndTwogate extends NextFTCOpMode {
 
 
 
-        public ILT6classifierAndTwogate() {
+        public ILT6classifierAndTwogateRed() {
             addComponents(
                     BindingsComponent.INSTANCE,
                     new SubsystemComponent(

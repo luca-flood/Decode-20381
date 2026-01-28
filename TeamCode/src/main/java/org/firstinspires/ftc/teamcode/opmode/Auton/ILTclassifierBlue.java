@@ -108,12 +108,14 @@ public class ILTclassifierBlue extends NextFTCOpMode {
                         new FollowPath(Path1, true, 0.8)
                 ),
                // outtakeSubsystem.INSTANCE.off(),
+                intakeSubsystem.INSTANCE.slowSuck,
                 new ParallelGroup(
                         (Command) new FollowPath(Path2),
                         outtakeSubsystem.INSTANCE.setVel(1900),
                         hoodSubsystem.INSTANCE.goon(.20)
                         //ILTclassifierBlue.decreaseX()
                 ),
+                intakeSubsystem.INSTANCE.eat,
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
                 hoodSubsystem.INSTANCE.goon(.33),
                 new Delay (0.2),
@@ -123,7 +125,7 @@ public class ILTclassifierBlue extends NextFTCOpMode {
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
                 hoodSubsystem.INSTANCE.goon(.29),
                 outtakeSubsystem.INSTANCE.setVel(1700),
-                intakeSubsystem.INSTANCE.eat,
+                intakeSubsystem.INSTANCE.slowSuck,
                 new FollowPath(Path3),
                 new Delay(1),
 
@@ -132,6 +134,7 @@ public class ILTclassifierBlue extends NextFTCOpMode {
                         outtakeSubsystem.INSTANCE.setVel(1900),
                         hoodSubsystem.INSTANCE.goon(.20)
                 ),
+                intakeSubsystem.INSTANCE.eat,
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
                 hoodSubsystem.INSTANCE.goon(.36),
                 new Delay (0.2),
@@ -141,7 +144,7 @@ public class ILTclassifierBlue extends NextFTCOpMode {
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
                 hoodSubsystem.INSTANCE.goon(.29),
                 outtakeSubsystem.INSTANCE.setVel(1700),
-                intakeSubsystem.INSTANCE.eat,
+                intakeSubsystem.INSTANCE.slowSuck,
                 new FollowPath(Path3),
                 new Delay(1),
 
@@ -150,6 +153,7 @@ public class ILTclassifierBlue extends NextFTCOpMode {
                         outtakeSubsystem.INSTANCE.setVel(1900),
                         hoodSubsystem.INSTANCE.goon(.20)
                 ),
+                intakeSubsystem.INSTANCE.eat,
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
                 hoodSubsystem.INSTANCE.goon(.36),
                 new Delay (0.2),
@@ -159,7 +163,7 @@ public class ILTclassifierBlue extends NextFTCOpMode {
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
                 hoodSubsystem.INSTANCE.goon(.29),
                 outtakeSubsystem.INSTANCE.setVel(1700),
-                intakeSubsystem.INSTANCE.eat,
+                intakeSubsystem.INSTANCE.slowSuck,
                 new FollowPath(Path5),
                 new Delay(1),
                 new ParallelGroup(
@@ -167,6 +171,7 @@ public class ILTclassifierBlue extends NextFTCOpMode {
                     outtakeSubsystem.INSTANCE.setVel(1900),
                     hoodSubsystem.INSTANCE.goon(.20)
                 ),
+                intakeSubsystem.INSTANCE.eat,
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
                 hoodSubsystem.INSTANCE.goon(.36),
                 new Delay (0.2),

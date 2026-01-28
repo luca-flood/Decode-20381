@@ -34,7 +34,7 @@ import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.ftc.components.BulkReadComponent;
 import dev.nextftc.hardware.impl.MotorEx;
 
-@Autonomous(name = "ILTigga Midigga Bligga")
+@Autonomous(name = "ILT Blue 2 Far")
 public class ILTFarBlueMiddle extends NextFTCOpMode {
 
     private TelemetryManager panelsTelemetry; // Panels Telemetry instance
