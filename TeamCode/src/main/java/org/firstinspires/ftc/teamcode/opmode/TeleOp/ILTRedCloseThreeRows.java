@@ -390,6 +390,9 @@ public class ILTRedCloseThreeRows extends NextFTCOpMode {
         else if(robotVelocityMag > 10){
             outtakeSubsystem.INSTANCE.off().schedule();
         }
+        else {
+            outtakeSubsystem.INSTANCE.setVel(0).schedule();
+        }
 
         if (gamepad1.a) {
             turretTracking = !turretTracking;
