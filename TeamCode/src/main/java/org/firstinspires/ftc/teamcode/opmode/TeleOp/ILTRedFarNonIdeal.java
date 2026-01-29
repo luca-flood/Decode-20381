@@ -11,7 +11,6 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.IMU;
@@ -49,7 +48,7 @@ import org.opencv.core.Scalar;
 import java.util.List;
 
 @TeleOp(name="Red Far NOT Ideal", group="Red ILT")
-public class ILTRedFarClassifier extends NextFTCOpMode {
+public class ILTRedFarNonIdeal extends NextFTCOpMode {
 
     // conditions + hardware
 
@@ -146,7 +145,7 @@ public class ILTRedFarClassifier extends NextFTCOpMode {
     ColorBlobLocatorProcessor greenProcessor;
     VisionPortal portal;
 
-    public ILTRedFarClassifier() {
+    public ILTRedFarNonIdeal() {
         addComponents(
                 BindingsComponent.INSTANCE,
                 new SubsystemComponent(
