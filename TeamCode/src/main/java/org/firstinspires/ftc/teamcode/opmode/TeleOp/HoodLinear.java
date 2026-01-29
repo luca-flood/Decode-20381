@@ -19,6 +19,9 @@ import dev.nextftc.extensions.pedro.PedroComponent;
 import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.ftc.components.BulkReadComponent;
 
+
+@Disabled
+
 @TeleOp(name="Hood Test", group="diddy bals")
 public class HoodLinear extends NextFTCOpMode {
     double position = 0;

@@ -296,6 +296,7 @@ public class veloHoodtest extends NextFTCOpMode {
         telemetry.addData("Optimal Velocity", getVelocity(distance));
         telemetry.addData("Bot X", clankerX);
         telemetry.addData("Bot Y", clankerY);
+        telemetry.addData("Heading", clankerR);
 
         telemetry.update();
     }

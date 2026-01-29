@@ -34,7 +34,7 @@ import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.ftc.components.BulkReadComponent;
 import dev.nextftc.hardware.impl.MotorEx;
 
-@Autonomous(name = "ILT Red 2 Classifier Far", group = "Red")
+@Autonomous(name = "Red 2 Classifier Far", group = "Red Far")
 public class ILTFar2RedClassifier extends NextFTCOpMode {
 
     private TelemetryManager panelsTelemetry; // Panels Telemetry instance

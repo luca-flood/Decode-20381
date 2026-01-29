@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.opmode.Auton;
+package org.firstinspires.ftc.teamcode.opmode.Auton.OldCode;
 
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
@@ -6,7 +6,9 @@ import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
+import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.hoodSubsystem;
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.intakeSubsystem;
@@ -19,13 +21,10 @@ import dev.nextftc.core.commands.groups.SequentialGroup;
 import dev.nextftc.core.components.SubsystemComponent;
 import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.ftc.components.BulkReadComponent;
-import com.pedropathing.util.Timer;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
-
-
 @Disabled
-@Autonomous(name = "Gooner2 BLUE")
-public class Meet1Auton2Blue extends NextFTCOpMode {
+
+@Autonomous(name = "Gooner2 RED")
+public class Meet1Auton2Red extends NextFTCOpMode {
 
     private TelemetryManager panelsTelemetry; // Panels Telemetry instance
     public Follower follower; // Pedro Pathing follower instance
@@ -33,7 +32,7 @@ public class Meet1Auton2Blue extends NextFTCOpMode {
     private Paths paths; // Paths defined in the Paths class
     private Timer pathTimer, actionTimer, opmodeTimer;
 
-    public Meet1Auton2Blue() {
+    public Meet1Auton2Red() {
         addComponents(
                 new SubsystemComponent(hoodSubsystem.INSTANCE, intakeSubsystem.INSTANCE, outtakeSubsystem.INSTANCE),
                 BulkReadComponent.INSTANCE
@@ -44,7 +43,7 @@ public class Meet1Auton2Blue extends NextFTCOpMode {
         return new SequentialGroup(
                 hoodSubsystem.INSTANCE.far,
                 //outtakeSubsystem.INSTANCE.off,
-//                outtakeSubsystem.INSTANCE.noPower(),
+                outtakeSubsystem.INSTANCE.noPower(),
                 new Delay(5),
                 outtakeSubsystem.INSTANCE.far(),
                 new Delay(0.3),
@@ -72,11 +71,11 @@ public class Meet1Auton2Blue extends NextFTCOpMode {
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
 
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(new Pose(60, 20, Math.toRadians(90)));
+        follower.setStartingPose(new Pose(80, 20, Math.toRadians(90)));
 
         paths = new Paths(follower); // Build paths
         outtakeSubsystem.INSTANCE.off().schedule();
-//        outtakeSubsystem.INSTANCE.noPower().schedule();
+        outtakeSubsystem.INSTANCE.noPower().schedule();
         opmodeTimer = new Timer();
         opmodeTimer.resetTimer();
 
@@ -113,12 +112,12 @@ public class Meet1Auton2Blue extends NextFTCOpMode {
                     .pathBuilder()
                     .addPath(
                             new BezierCurve(
-                                    new Pose(60, 21.000),
-                                    new Pose(57.938, 34.578),
-                                    new Pose(72.618, 39.460)
+                                    new Pose(80.000, 21.000),
+                                    new Pose(79.838, 34.578),
+                                    new Pose(66.618, 39.460)
                             )
                     )
-                    .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(120))
+                    .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(57))
                     .build();
             Path2 = follower
                     .pathBuilder()
@@ -128,7 +127,7 @@ public class Meet1Auton2Blue extends NextFTCOpMode {
                                     new Pose(72.618, 50)
                             )
                     )
-                    .setLinearHeadingInterpolation(Math.toRadians(120), Math.toRadians(90))
+                    .setLinearHeadingInterpolation(Math.toRadians(57), Math.toRadians(90))
                     .build();
         }
     }

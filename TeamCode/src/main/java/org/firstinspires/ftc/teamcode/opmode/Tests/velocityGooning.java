@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.opmode.Tests;
 
 import static dev.nextftc.bindings.Bindings.button;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.outtakeSubsystem;
@@ -12,6 +13,9 @@ import dev.nextftc.core.components.BindingsComponent;
 import dev.nextftc.core.components.SubsystemComponent;
 import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.ftc.components.BulkReadComponent;
+
+
+@Disabled
 
 @TeleOp(name="veloGoon")
 public class velocityGooning extends NextFTCOpMode {

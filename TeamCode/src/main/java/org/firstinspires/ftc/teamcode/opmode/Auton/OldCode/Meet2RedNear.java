@@ -1,9 +1,8 @@
-package org.firstinspires.ftc.teamcode.opmode.Auton;
+package org.firstinspires.ftc.teamcode.opmode.Auton.OldCode;
 
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.follower.Follower;
-import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
@@ -32,20 +31,20 @@ import dev.nextftc.ftc.components.BulkReadComponent;
 
 @Disabled
 
-@Autonomous(name = "blueNear")
+@Autonomous(name = "redNear")
 
-public class Meet2BlueNear extends NextFTCOpMode {
+public class Meet2RedNear extends NextFTCOpMode {
 
 
     private TelemetryManager panelsTelemetry; // Panels Telemetry instance
     private int pathState; // Current autonomous path state (state machine)
-    private Meet2BlueNear.Paths paths; // Paths defined in the Paths class
+    private Meet2RedNear.Paths paths; // Paths defined in the Paths class
     private Timer pathTimer, actionTimer, opmodeTimer;
 
-    private PathChain Path1, Path2, Path3, Path4, Path5, Path6, Path7, Path8;
+    private PathChain Path1, Path2, Path3, Path4;
 
 
-    public Meet2BlueNear() {
+    public Meet2RedNear() {
         addComponents(
                 new SubsystemComponent(
                         outtakeSubsystem.INSTANCE,
@@ -60,31 +59,19 @@ public class Meet2BlueNear extends NextFTCOpMode {
 
     private Command autonomousRoutine(){
         return new SequentialGroup(
-                new TurnTo(Angle.fromDeg(143)),
+//                shoot(),
+                new TurnTo(Angle.fromDeg(37)),
                 new ParallelGroup(
-                      new FollowPath(Path2),
-                      multiFunctionSubsystem.INSTANCE.transpherSequencNiga()
-                ),
-//                intakeSubsystem.INSTANCE.sleep,
-//                intakeSubsystem.INSTANCE.eat,
-                new Delay (0.5),
-                multiFunctionSubsystem.INSTANCE.outtakeSequence(),
-              //  new TurnTo(Angle.fromDeg(180)),
+                        new FollowPath(Path2),
+                        hoodSubsystem.INSTANCE.auto),
+//                        outtakeSubsystem.INSTANCE.close),
+//                multiFunctionSubsystem.INSTANCE.transferSequence(),
+                new TurnTo(Angle.fromDeg(0)),
                 intakeSubsystem.INSTANCE.eat,
                 new FollowPath(Path3),
                 intakeSubsystem.INSTANCE.sleep,
-                new FollowPath(Path4),
-                multiFunctionSubsystem.INSTANCE.outtakeSequence(),
-                intakeSubsystem.INSTANCE.eat,
-                new FollowPath(Path5),
-                intakeSubsystem.INSTANCE.sleep,
-                new FollowPath(Path6),
-                multiFunctionSubsystem.INSTANCE.outtakeSequence(),
-                intakeSubsystem.INSTANCE.eat,
-                new FollowPath(Path7),
-                intakeSubsystem.INSTANCE.sleep,
-                new FollowPath(Path8),
-                multiFunctionSubsystem.INSTANCE.outtakeSequence()
+                new FollowPath(Path4)
+//                multiFunctionSubsystem.INSTANCE.outtakeSequence()
         );
     }
 
@@ -100,9 +87,9 @@ public class Meet2BlueNear extends NextFTCOpMode {
     @Override
     public void onInit() {
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
-        PedroComponent.follower().setStartingPose(new Pose(27, 130, Math.toRadians(143)));
+        PedroComponent.follower().setStartingPose(new Pose(27, 130, Math.toRadians(143)).mirror());
 
-        paths = new Meet2BlueNear.Paths(PedroComponent.follower()); // Build paths
+        paths = new Meet2RedNear.Paths(PedroComponent.follower()); // Build paths
         outtakeSubsystem.INSTANCE.off().schedule();
         outtakeSubsystem.INSTANCE.noPower().schedule();
         opmodeTimer = new Timer();
@@ -111,77 +98,33 @@ public class Meet2BlueNear extends NextFTCOpMode {
         Path1 = PedroComponent.follower()
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(27.000, 130.000), new Pose(27.000, 130.000))
+                        new BezierLine(new Pose(27.000, 130.000).mirror(), new Pose(27.000, 130.000).mirror())
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(143))
+                .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(37))
                 .build();
 
         Path2 = PedroComponent.follower()
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(27.000, 130.000), new Pose(65, 80))
+                        new BezierLine(new Pose(27.000, 130.000).mirror(), new Pose(60, 84.139).mirror())
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(143), Math.toRadians(135))
+                .setLinearHeadingInterpolation(Math.toRadians(37), Math.toRadians(45))
                 .build();
 
         Path3 = PedroComponent.follower()
                 .pathBuilder()
                 .addPath(
-                        new BezierCurve(
-                                new Pose(65, 80),
-                                new Pose(78.764, 84.139),
-                                new Pose(25, 84.324)
-                        )
+                        new BezierLine(new Pose(60, 84.139).mirror(), new Pose(25, 83.583).mirror())
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(135), Math.toRadians(180))
+                .setConstantHeadingInterpolation(Math.toRadians(0))
                 .build();
 
         Path4 = PedroComponent.follower()
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(25, 84.324), new Pose(66.347, 84.510))
+                        new BezierLine(new Pose(25, 83.583).mirror(), new Pose(66.347, 84.510).mirror())
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(141))
-                .build();
-
-        Path5 = PedroComponent.follower()
-                .pathBuilder()
-                .addPath(
-                        new BezierCurve(
-                                new Pose(60.000, 84.139),
-                                new Pose(72.278, 56.154),
-                                new Pose(25, 62.5)
-                        )
-                )
-                .setLinearHeadingInterpolation(Math.toRadians(135), Math.toRadians(180))
-                .build();
-
-        Path6 = PedroComponent.follower()
-                .pathBuilder()
-                .addPath(
-                        new BezierLine(new Pose(25, 62.5), new Pose(66.347, 84.510))
-                )
-                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(141))
-                .build();
-
-        Path7 = PedroComponent.follower()
-                .pathBuilder()
-                .addPath(
-                        new BezierCurve(
-                                new Pose(60.000, 84.139),
-                                new Pose(79.135, 36.510),
-                                new Pose(25, 37.5)
-                        )
-                )
-                .setLinearHeadingInterpolation(Math.toRadians(135), Math.toRadians(180))
-                .build();
-
-        Path8 = PedroComponent.follower()
-                .pathBuilder()
-                .addPath(
-                        new BezierLine(new Pose(25, 37.5), new Pose(66.347, 84.510))
-                )
-                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(141))
+                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(37))
                 .build();
 
         panelsTelemetry.debug("Status", "Initialized");

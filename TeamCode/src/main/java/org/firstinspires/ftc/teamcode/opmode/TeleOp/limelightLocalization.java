@@ -4,6 +4,7 @@ import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
@@ -13,6 +14,7 @@ import org.firstinspires.ftc.teamcode.opmode.Subsystems.multiFunctionSubsystem;
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.outtakeSubsystem;
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.transferSubsystem;
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.turretSubsystem;
+import org.firstinspires.ftc.teamcode.opmode.TeleOp.oldCode.NEXTftcOpMode;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 import dev.nextftc.bindings.BindingManager;
@@ -24,8 +26,11 @@ import dev.nextftc.ftc.components.BulkReadComponent;
 import dev.nextftc.hardware.driving.MecanumDriverControlled;
 import dev.nextftc.hardware.impl.MotorEx;
 
+
+@Disabled
+
 @TeleOp(name = "I goon to femboys")
-public class limelightLocalization extends NEXTftcOpMode{
+public class limelightLocalization extends NEXTftcOpMode {
 
     MotorEx frontLeftMotor;
     MotorEx frontRightMotor;
@@ -34,6 +39,7 @@ public class limelightLocalization extends NEXTftcOpMode{
     Limelight3A limelight;
     Follower clanka;
     Pose3D pose;
+
     public limelightLocalization() {
         addComponents(
                 BindingsComponent.INSTANCE,

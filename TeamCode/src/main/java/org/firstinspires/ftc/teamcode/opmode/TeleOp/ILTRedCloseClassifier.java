@@ -6,34 +6,19 @@ import android.util.Size;
 
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
-import com.pedropathing.math.Vector;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
+import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.IMU;
-import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 
-import dev.nextftc.bindings.BindingManager;
-import dev.nextftc.control.ControlSystem;
-import dev.nextftc.control.KineticState;
-import dev.nextftc.core.components.BindingsComponent;
-import dev.nextftc.core.components.SubsystemComponent;
-import dev.nextftc.extensions.pedro.PedroComponent;
-import dev.nextftc.ftc.Gamepads;
-import dev.nextftc.ftc.NextFTCOpMode;
-import dev.nextftc.ftc.components.BulkReadComponent;
-import dev.nextftc.hardware.driving.MecanumDriverControlled;
-import dev.nextftc.hardware.impl.CRServoEx;
-import dev.nextftc.hardware.impl.MotorEx;
-
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
-import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.hoodSubsystem;
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.intakeSubsystem;
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.multiFunctionSubsystem;
@@ -48,10 +33,27 @@ import org.firstinspires.ftc.vision.opencv.ColorSpace;
 import org.firstinspires.ftc.vision.opencv.ImageRegion;
 import org.opencv.core.Scalar;
 
-@TeleOp(name="ILT testing", group="Linear Opmode")
-public class ILT extends NextFTCOpMode {
+import java.util.List;
 
-    // hardware, controllers
+import dev.nextftc.bindings.BindingManager;
+import dev.nextftc.control.ControlSystem;
+import dev.nextftc.control.KineticState;
+import dev.nextftc.core.components.BindingsComponent;
+import dev.nextftc.core.components.SubsystemComponent;
+import dev.nextftc.extensions.pedro.PedroComponent;
+import dev.nextftc.ftc.Gamepads;
+import dev.nextftc.ftc.NextFTCOpMode;
+import dev.nextftc.ftc.components.BulkReadComponent;
+import dev.nextftc.hardware.driving.MecanumDriverControlled;
+import dev.nextftc.hardware.impl.CRServoEx;
+import dev.nextftc.hardware.impl.MotorEx;
+
+@TeleOp(name="Red Near NOT Ideal", group="Red ILT")
+public class ILTRedCloseClassifier extends NextFTCOpMode {
+
+    // conditions + hardware
+
+    boolean autoShoot = false;
     MotorEx turret = new MotorEx("turret").zeroed().reversed();
     private ControlSystem controller;
 
@@ -64,9 +66,14 @@ public class ILT extends NextFTCOpMode {
     IMU imu;
     Follower clanka;
 
+    Rev2mDistanceSensor proxySens;
+    RevColorSensorV3 colorSens;
+    Servo backlight;
+    boolean hasArtifact;
+
+    boolean shooting = false;
 
     // turret vars
-
     boolean turretTracking = true;
 
     double fx = 626.909;
@@ -74,8 +81,6 @@ public class ILT extends NextFTCOpMode {
 
     double cx = 426.007;
     double cy = 236.834;
-
-    boolean hasArtifact;
 
     double robotYaw = 0;
 
@@ -140,11 +145,8 @@ public class ILT extends NextFTCOpMode {
     ColorBlobLocatorProcessor purpleProcessor;
     ColorBlobLocatorProcessor greenProcessor;
     VisionPortal portal;
-    DistanceSensor proxySens;
-    NormalizedColorSensor colorSens;
-    Servo backlight;
 
-    public ILT() {
+    public ILTRedCloseClassifier() {
         addComponents(
                 BindingsComponent.INSTANCE,
                 new SubsystemComponent(
@@ -161,18 +163,19 @@ public class ILT extends NextFTCOpMode {
     }
 
     // velo/hood calcs
-    public double getDistance(double ta) {
-        return 75.16142 * Math.pow(ta, -0.47932);
-    }
 
-    public double getHoodAngle(double dist) {
-        return 0.00578881 * dist - 0.00802588;
-    }
+//    public double getDistance(double ta) {
+//        return 75.16142 * Math.pow(ta, -0.47932);
+//    }
+//    public double getHoodAngle(double dist) {
+//        return 0.00578881 * dist - 0.00802588;
+//    }
+//
+//    public double getVelocity(double dist) {
+//        return 10.99866 * dist + 1084.95409;
+//    }
 
-    public double getVelocity(double dist) {
-        return 10.99866 * dist + 1084.95409;
-    }
-
+    //large triangle curves
     public double getVel(double dist) {
         return 7.65268 * dist + 1123.06996;
     }
@@ -181,9 +184,17 @@ public class ILT extends NextFTCOpMode {
         return 71.71201 * Math.pow(dist, -1.17652);
     }
 
+    //small triangle curves
+    public double getVelFar(double dist){
+        return 19.17589 * dist - 582.51652;
+    }
+    public double getHoodFar(double dist){
+        return -0.0210202 * dist + 3.48553;
+    }
+
+
 
     // turret calcs
-
     public double normalize(double angle) {
         while (angle > Math.PI) angle -= 2 * Math.PI;
         while (angle <= -Math.PI) angle += 2 * Math.PI;
@@ -214,14 +225,14 @@ public class ILT extends NextFTCOpMode {
 
     @Override
     public void onInit() {
-        // proxySens = hardwareMap.get(DistanceSensor.class, "proxySens");
-        // colorSens = hardwareMap.get(NormalizedColorSensor.class, "colorSens");
-        // backlight = hardwareMap.get(Servo.class, "backlight");
-
         liftL = new CRServoEx("liftLeft");
         liftR = new CRServoEx("liftRight");
 
         imu = hardwareMap.get(IMU.class, "imu");
+
+        proxySens = hardwareMap.get(Rev2mDistanceSensor.class, "proxySensor");
+        colorSens = hardwareMap.get(RevColorSensorV3.class, "color sensor");
+        backlight = hardwareMap.get(Servo.class, "backlight");
 
         RevHubOrientationOnRobot revOrientation = new RevHubOrientationOnRobot(
                 RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
@@ -267,7 +278,7 @@ public class ILT extends NextFTCOpMode {
         backLeftMotor.setDirection(1);
 
         clanka = PedroComponent.follower();
-        clanka.setStartingPose(new Pose(72, 72, Math.toRadians(90)));
+        clanka.setStartingPose(new Pose(79.6702, 91.5592, .783).mirror());
 
         transferSubsystem.INSTANCE.toNeutral.schedule();
 
@@ -281,7 +292,7 @@ public class ILT extends NextFTCOpMode {
         controller.setGoal(new KineticState(0.0));
 
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
-        limelight.pipelineSwitch(0);
+        limelight.pipelineSwitch(1);
         telemetry.setMsTransmissionInterval(1);
 
         targetVel = 0;
@@ -298,14 +309,6 @@ public class ILT extends NextFTCOpMode {
                 Gamepads.gamepad1().leftStickX(),
                 Gamepads.gamepad1().rightStickX()
         ).schedule();
-        //button maxxing
-//        button(() -> gamepad1.x).whenBecomesTrue(
-//                new SequentialGroup(
-//                outtakeSubsystem.INSTANCE.setVel(getVelocity(distance)),
-//                multiFunctionSubsystem.INSTANCE.shootSeq(getHoodAngle(distance)),
-//                outtakeSubsystem.INSTANCE.off()
-//        ));
-
 
         button(() -> gamepad1.y).whenBecomesTrue(multiFunctionSubsystem.INSTANCE.transpherSequencNiga());
 
@@ -316,7 +319,16 @@ public class ILT extends NextFTCOpMode {
         clanka.update();
         BindingManager.update();
 
-        // blobDetected = checkForBlobs(portal, purpleProcessor, greenProcessor);
+        if ((proxySens.getDistance(DistanceUnit.INCH) < 5) && colorSens.getDistance(DistanceUnit.INCH) < 5) {
+            hasArtifact = true;
+            backlight.setPosition(4.720);
+        }
+        else {
+            hasArtifact = false;
+            backlight.setPosition(0.277);
+        }
+
+        blobDetected = checkForBlobs(portal, purpleProcessor, greenProcessor);
         // robot pose(X, Y, R)
         heading = clanka.getHeading();
         clankerX = clanka.getPose().getX();
@@ -369,15 +381,15 @@ public class ILT extends NextFTCOpMode {
         }
 
         // subsystem automation velo+hood
-        if (gamepad1.right_trigger > 0.1) {
+        if (autoShoot && (gamepad1.right_trigger > 0.1)) {
             if(!far){
                 outtakeSubsystem.INSTANCE.setVel(getVel(distance)).schedule();
             }
             else{
-                outtakeSubsystem.INSTANCE.setVel(2400).schedule();
+                outtakeSubsystem.INSTANCE.setVel(getVelFar(distance)).schedule();
             }
         }
-        else{
+        else if(robotVelocityMag > 10){
             outtakeSubsystem.INSTANCE.off().schedule();
         }
 
@@ -398,7 +410,7 @@ public class ILT extends NextFTCOpMode {
         if(!far){
             hoodSubsystem.INSTANCE.goon(getHood(distance)).schedule();
         }else{
-            hoodSubsystem.INSTANCE.goon(0.15).schedule();
+            hoodSubsystem.INSTANCE.goon(getHoodFar(distance)).schedule();
         }
 
         if (!turretTracking && Math.abs(turret.getCurrentPosition()) < 5) {
@@ -407,20 +419,29 @@ public class ILT extends NextFTCOpMode {
             turret.setPower(turretPower);
         }
 
+        //auto shoot algorithm
+        //first, check if turret has corrected already(wraps turret error, robot velocity)
+        if(hasCorrectedLL){
+            autoShoot = true;
+            if(hasArtifact){
+                multiFunctionSubsystem.INSTANCE.transpherSequencNiga().schedule();
+            }
+        }
+
         // intake digger
         if (gamepad1.left_bumper) {
             intakeSubsystem.INSTANCE.slowSpit.schedule();
         } else if (gamepad1.right_bumper) {
             intakeSubsystem.INSTANCE.eat.schedule();
         }
-//        else if (blobDetected != null) {
-//            if (blobDetected) {
-//                intakeSubsystem.INSTANCE.eat.schedule();
-//            }
-//            else {
-//                intakeSubsystem.INSTANCE.sleep.schedule();
-//            }
-//        }
+        else if (blobDetected != null) {
+            if (blobDetected) {
+                intakeSubsystem.INSTANCE.eat.schedule();
+            }
+            else {
+                intakeSubsystem.INSTANCE.sleep.schedule();
+            }
+        }
         else {
             intakeSubsystem.INSTANCE.sleep.schedule();
         }
@@ -440,26 +461,7 @@ public class ILT extends NextFTCOpMode {
         if (gamepad1.dpad_up) {
             limelightTracking = !limelightTracking;
         }
-//        if (gamepad1.dpad_down) {
-//            angleOffset -= 1;
-//        }
 
-//        telemetry.addLine("--- YAW DIAGNOSTICS ---");
-//        telemetry.addData("1. Raw IMU", robotYaw);
-//        telemetry.addData("2. Turret Degrees", turretYaw);
-//        telemetry.addData("3. Combined Global Yaw", globalCameraYaw);
-//        telemetry.addData("4. Offset Value", angleOffset);
-//
-//        telemetry.addLine("--- COORDINATE CHECK ---");
-//        telemetry.addData("Pedro Pose", "X: %.2f, Y: %.2f", clankerX, clankerY);
-//        telemetry.addData("Vision Pose", "X: %.2f, Y: %.2f", visionX, visionY);
-//        telemetry.addData("Difference", "X: %.2f, Y: %.2f", xDiff, yDiff);
-//
-//        telemetry.addLine("--- VISUAL SYNC TEST ---");
-//        telemetry.addData("Action", (globalCameraYaw > -5 && globalCameraYaw < 5) ? "LOOKING AT RED WALL" :
-//                (globalCameraYaw > 85 && globalCameraYaw < 95) ? "LOOKING AT BLUE DEPOT" : "ROTATING...");
-
-        // telemetry
         telemetry.addData("Distance", distance);
         telemetry.addData("Tag Found", tagFound);
         telemetry.addData("Turret Pos", turret.getCurrentPosition());
@@ -467,14 +469,7 @@ public class ILT extends NextFTCOpMode {
         telemetry.addData("Degree Offset (Kinematics)", theta);
         telemetry.addData("Target Ticks", -ticks);
         telemetry.addData("robotVelocity", clanka.getVelocity());
-//        telemetry.addData("Optimal Velo", getVel(distance));
-//        //  telemetry.addData("Camera Status", portal.getCameraState());
-//        telemetry.addData("Hood Angle", hoodSubsystem.INSTANCE.getDaddy());
-//        telemetry.addData("Pedro X", clankerX);
-//        telemetry.addData("Pedro Y", clankerY);
-//        telemetry.addData("Vision X", visionX);
-//        telemetry.addData("VisionY", visionY);
-//        telemetry.addData("imu data", imu.getRobotYawPitchRollAngles());
+
 
         // List<ColorBlobLocatorProcessor.Blob> purpleBlobs = purpleProcessor.getBlobs();
         // List<ColorBlobLocatorProcessor.Blob> greenBlobs = greenProcessor.getBlobs();
@@ -489,34 +484,32 @@ public class ILT extends NextFTCOpMode {
         telemetry.update();
     }
 
-//    public Boolean checkForBlobs(VisionPortal portal,
-//                                 ColorBlobLocatorProcessor purpleProc,
-//                                 ColorBlobLocatorProcessor greenProc) {
-//
-//        // 1. Verify Camera is actually STREAMING.
-//        // If it's OPENING, STARTING_STREAM, or ERROR, we cannot claim "False" yet.
-//        if (portal.getCameraState() != VisionPortal.CameraState.STREAMING) {
-//            return null;
-//        }
-//
-//        // 2. Get Blobs
-//        List<ColorBlobLocatorProcessor.Blob> purpleBlobs = purpleProc.getBlobs();
-//        List<ColorBlobLocatorProcessor.Blob> greenBlobs = greenProc.getBlobs();
-//
-//        // 3. Filter out noise (Blobs smaller than 50 pixels area)
-//        ColorBlobLocatorProcessor.Util.filterByArea(50, 20000, purpleBlobs);
-//        ColorBlobLocatorProcessor.Util.filterByArea(50, 20000, greenBlobs);
-//
-//
-//        // 4. Check counts
-//        boolean seePurple = purpleBlobs.size() > 1;
-////        boolean seeGreen = greenBlobs.size() > 3;
-//
-//        // 5. Return logic
-//        return seePurple;
-/// /                || seeGreen;
-//    }
-        public YawPitchRollAngles getIMU(AngleUnit angleUnit){
-            return imu.getRobotYawPitchRollAngles();
+    public Boolean checkForBlobs(VisionPortal portal,
+                                 ColorBlobLocatorProcessor purpleProc,
+                                 ColorBlobLocatorProcessor greenProc) {
+
+        // 1. Verify Camera is actually STREAMING.
+        // If it's OPENING, STARTING_STREAM, or ERROR, we cannot claim "False" yet.
+        if (portal.getCameraState() != VisionPortal.CameraState.STREAMING) {
+            return null;
         }
+
+        // 2. Get Blobs
+        List<ColorBlobLocatorProcessor.Blob> purpleBlobs = purpleProc.getBlobs();
+        List<ColorBlobLocatorProcessor.Blob> greenBlobs = greenProc.getBlobs();
+
+        // 3. Filter out noise (Blobs smaller than 50 pixels area)
+        ColorBlobLocatorProcessor.Util.filterByArea(50, 20000, purpleBlobs);
+        ColorBlobLocatorProcessor.Util.filterByArea(50, 20000, greenBlobs);
+
+        // 4. Check counts
+        boolean seePurple = purpleBlobs.size() > 1;
+        boolean seeGreen = greenBlobs.size() > 3;
+
+        // 5. Return logic
+        return seePurple ||seeGreen;
+    }
+//        public YawPitchRollAngles getIMU(AngleUnit angleUnit){
+//            return imu.getRobotYawPitchRollAngles();
+//        }
 }

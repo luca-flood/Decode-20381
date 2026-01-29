@@ -38,7 +38,7 @@ import dev.nextftc.ftc.components.BulkReadComponent;
 import dev.nextftc.hardware.impl.MotorEx;
 
 
-@Autonomous(name = "Blue nine  Classifier", group = "dit shigger")
+@Autonomous(name = "Blue nine  Classifier", group = "Blue")
 public class ILTnineClassifier extends NextFTCOpMode {
 
     private TelemetryManager panelsTelemetry; // Panels Telemetry instance

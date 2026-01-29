@@ -1,8 +1,9 @@
-package org.firstinspires.ftc.teamcode.opmode.Auton;
+package org.firstinspires.ftc.teamcode.opmode.Auton.OldCode;
 
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
@@ -11,7 +12,6 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.hoodSubsystem;
-import org.firstinspires.ftc.teamcode.opmode.Subsystems.intakeSubsystem;
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.multiFunctionSubsystem;
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.outtakeSubsystem;
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.transferSubsystem;
@@ -19,32 +19,28 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 import dev.nextftc.core.commands.Command;
 import dev.nextftc.core.commands.delays.Delay;
-import dev.nextftc.core.commands.groups.ParallelGroup;
 import dev.nextftc.core.commands.groups.SequentialGroup;
 import dev.nextftc.core.components.SubsystemComponent;
-import dev.nextftc.core.units.Angle;
 import dev.nextftc.extensions.pedro.FollowPath;
 import dev.nextftc.extensions.pedro.PedroComponent;
-import dev.nextftc.extensions.pedro.TurnTo;
 import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.ftc.components.BulkReadComponent;
 
 @Disabled
 
-@Autonomous(name = "redNear")
+@Autonomous(name = "redFar")
 
-public class Meet2RedNear extends NextFTCOpMode {
+public class Meet2Auton3Red extends NextFTCOpMode {
 
 
     private TelemetryManager panelsTelemetry; // Panels Telemetry instance
     private int pathState; // Current autonomous path state (state machine)
-    private Meet2RedNear.Paths paths; // Paths defined in the Paths class
     private Timer pathTimer, actionTimer, opmodeTimer;
 
     private PathChain Path1, Path2, Path3, Path4;
 
 
-    public Meet2RedNear() {
+    public Meet2Auton3Red() {
         addComponents(
                 new SubsystemComponent(
                         outtakeSubsystem.INSTANCE,
@@ -59,19 +55,11 @@ public class Meet2RedNear extends NextFTCOpMode {
 
     private Command autonomousRoutine(){
         return new SequentialGroup(
-//                shoot(),
-                new TurnTo(Angle.fromDeg(37)),
-                new ParallelGroup(
-                        new FollowPath(Path2),
-                        hoodSubsystem.INSTANCE.auto),
-//                        outtakeSubsystem.INSTANCE.close),
-//                multiFunctionSubsystem.INSTANCE.transferSequence(),
-                new TurnTo(Angle.fromDeg(0)),
-                intakeSubsystem.INSTANCE.eat,
+                new FollowPath(Path1),
+                multiFunctionSubsystem.INSTANCE.outtakeSequenceFar(),
+                new FollowPath(Path2),
                 new FollowPath(Path3),
-                intakeSubsystem.INSTANCE.sleep,
                 new FollowPath(Path4)
-//                multiFunctionSubsystem.INSTANCE.outtakeSequence()
         );
     }
 
@@ -87,9 +75,9 @@ public class Meet2RedNear extends NextFTCOpMode {
     @Override
     public void onInit() {
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
-        PedroComponent.follower().setStartingPose(new Pose(27, 130, Math.toRadians(143)).mirror());
+        PedroComponent.follower().setStartingPose(new Pose(60, 20, Math.toRadians(90)).mirror());
 
-        paths = new Meet2RedNear.Paths(PedroComponent.follower()); // Build paths
+//        paths = new Meet2Auton3Blue.Paths(PedroComponent.follower()); // Build paths
         outtakeSubsystem.INSTANCE.off().schedule();
         outtakeSubsystem.INSTANCE.noPower().schedule();
         opmodeTimer = new Timer();
@@ -98,23 +86,30 @@ public class Meet2RedNear extends NextFTCOpMode {
         Path1 = PedroComponent.follower()
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(27.000, 130.000).mirror(), new Pose(27.000, 130.000).mirror())
+                        new BezierCurve(
+                                new Pose(60, 21.000).mirror(),
+                                new Pose(57.938, 34.578).mirror(),
+                                new Pose(72.618, 39.460).mirror()
+                        )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(37))
+                .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(65))
                 .build();
 
         Path2 = PedroComponent.follower()
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(27.000, 130.000).mirror(), new Pose(60, 84.139).mirror())
+                        new BezierCurve(
+                                new Pose(72.618, 39.460).mirror(),
+                                new Pose(60, 35).mirror()
+                        )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(37), Math.toRadians(45))
+                .setLinearHeadingInterpolation(Math.toRadians(65), Math.toRadians(0))
                 .build();
 
         Path3 = PedroComponent.follower()
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(60, 84.139).mirror(), new Pose(25, 83.583).mirror())
+                        new BezierLine(new Pose(60, 35).mirror(), new Pose(25, 35).mirror())
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(0))
                 .build();
@@ -122,7 +117,7 @@ public class Meet2RedNear extends NextFTCOpMode {
         Path4 = PedroComponent.follower()
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(25, 83.583).mirror(), new Pose(66.347, 84.510).mirror())
+                        new BezierLine(new Pose(25, 35).mirror(), new Pose(66.347, 84.510).mirror())
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(37))
                 .build();

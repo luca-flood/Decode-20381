@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.opmode.Auton;
+package org.firstinspires.ftc.teamcode.opmode.Auton.OldCode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
@@ -7,14 +7,9 @@ import org.firstinspires.ftc.teamcode.opmode.Subsystems.hoodSubsystem;
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.multiFunctionSubsystem;
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.outtakeSubsystem;
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.transferSubsystem;
-import org.firstinspires.ftc.teamcode.opmode.Subsystems.BLMSubsystem;
-import org.firstinspires.ftc.teamcode.opmode.Subsystems.FLMSubsystem;
-import org.firstinspires.ftc.teamcode.opmode.Subsystems.BRMSubsystem;
-import org.firstinspires.ftc.teamcode.opmode.Subsystems.FRMSubsystem;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 import dev.nextftc.core.commands.Command;
-import dev.nextftc.core.commands.delays.Delay;
 import dev.nextftc.core.commands.groups.SequentialGroup;
 import dev.nextftc.core.components.SubsystemComponent;
 import dev.nextftc.extensions.pedro.PedroComponent;

@@ -34,8 +34,8 @@ import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.ftc.components.BulkReadComponent;
 import dev.nextftc.hardware.impl.MotorEx;
 
-@Autonomous(name = "Blue 1 Far", group = "Blue Far")
-public class ILTFarBlue extends NextFTCOpMode {
+@Autonomous(name = "Red 1 Far", group = "Red Far")
+public class ILTFarRed extends NextFTCOpMode {
 
     private TelemetryManager panelsTelemetry; // Panels Telemetry instance
 
@@ -58,7 +58,7 @@ public class ILTFarBlue extends NextFTCOpMode {
     double blueX = 0;
     double blueY = 144;
     double offset = 8.8;
-    double goalX = 13.8;
+    double goalX = 144 - 13.8;
     double goalY = 144;
     double theta;
     double ticks;
@@ -79,7 +79,7 @@ public class ILTFarBlue extends NextFTCOpMode {
     boolean readyShoot = false;
     double ticksToDegrees = (130.0 / 36.0) * (384.5 / 360.0);
 
-    public ILTFarBlue() {
+    public ILTFarRed() {
         addComponents(
                 BindingsComponent.INSTANCE,
                 new SubsystemComponent(
@@ -142,38 +142,38 @@ public class ILTFarBlue extends NextFTCOpMode {
         controller.setGoal(new KineticState(0.0));
 
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
-        clanka.setStartingPose(new Pose(50, 8, Math.toRadians(90)));
+        clanka.setStartingPose(new Pose(50, 8, Math.toRadians(90)).mirror());
 
         outtakeSubsystem.INSTANCE.off().schedule();
 
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
-        limelight.pipelineSwitch(0);
+        limelight.pipelineSwitch(1);
         telemetry.setMsTransmissionInterval(1);
 
         Path1 = clanka
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(50.388, 8.151),
-                                new Pose(92.624, 39.273),
-                                new Pose(23.712, 35.815)
+                                new Pose(50.388, 8.151).mirror(),
+                                new Pose(92.624, 39.273).mirror(),
+                                new Pose(23.712, 35.815).mirror()
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(180))
+                .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(0))
                 .build();
 
         Path2 = clanka
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(23.712, 35.815), new Pose(50.388, 10))
+                        new BezierLine(new Pose(23.712, 35.815).mirror(), new Pose(50.388, 10).mirror())
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(90))
+                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(90))
                 .build();
 
         Path3 = clanka
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(50.388, 10), new Pose(50.388, 40))
+                        new BezierLine(new Pose(50.388, 10).mirror(), new Pose(50.388, 40).mirror())
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(90))
                 .build();
@@ -241,6 +241,9 @@ public class ILTFarBlue extends NextFTCOpMode {
         panelsTelemetry.debug("Has Corrected", hasCorrectedLL);
         panelsTelemetry.debug("Error", yaw);
         panelsTelemetry.debug("Clanker Vel", robotVelocityMag);
+        panelsTelemetry.debug("Bot X", clankerX);
+        panelsTelemetry.debug("Bot Y", clankerY);
+        panelsTelemetry.debug("Bot A", clankerR);
         panelsTelemetry.update(telemetry);
     }
 

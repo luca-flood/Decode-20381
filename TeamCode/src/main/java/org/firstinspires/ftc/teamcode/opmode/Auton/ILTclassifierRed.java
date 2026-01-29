@@ -27,7 +27,6 @@ import dev.nextftc.core.commands.Command;
 import dev.nextftc.core.commands.delays.Delay;
 import dev.nextftc.core.commands.groups.ParallelGroup;
 import dev.nextftc.core.commands.groups.SequentialGroup;
-import dev.nextftc.core.commands.utility.LambdaCommand;
 import dev.nextftc.core.components.BindingsComponent;
 import dev.nextftc.core.components.SubsystemComponent;
 import dev.nextftc.extensions.pedro.FollowPath;
@@ -37,8 +36,8 @@ import dev.nextftc.ftc.components.BulkReadComponent;
 import dev.nextftc.hardware.impl.MotorEx;
 
 
-@Autonomous(name = "Red Classifier Goon", group = "dit shigger")
-public class ILTclassifierBlueRed extends NextFTCOpMode {
+@Autonomous(name = "Red 1 Classifier", group = "Red Near")
+public class ILTclassifierRed extends NextFTCOpMode {
 
     private TelemetryManager panelsTelemetry; // Panels Telemetry instance
 
@@ -72,7 +71,7 @@ public class ILTclassifierBlueRed extends NextFTCOpMode {
 
 
 
-    public ILTclassifierBlueRed() {
+    public ILTclassifierRed() {
         addComponents(
                 BindingsComponent.INSTANCE,
                 new SubsystemComponent(
@@ -377,13 +376,5 @@ public class ILTclassifierBlueRed extends NextFTCOpMode {
     }
 
     public Command increaseX(){goalX += 0.5; return null; };
-    Command decreaseX = new LambdaCommand()
-            .setStart(() -> {
-                goalX -= 0.5;
-    })
-            .setIsDone(() -> true)
-            .requires(this)
-            .named("decreaseX");
-
 
 }

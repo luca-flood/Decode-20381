@@ -1,15 +1,15 @@
-package org.firstinspires.ftc.teamcode.opmode.TeleOp;
+package org.firstinspires.ftc.teamcode.opmode.TeleOp.oldCode;
 
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.outtakeSubsystem;
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.transferSubsystem;
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.turretSubsystem;
-import org.firstinspires.ftc.vision.VisionPortal;
-import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
-import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+
+import com.qualcomm.hardware.limelightvision.LLStatus;
 
 import dev.nextftc.bindings.BindingManager;
 import dev.nextftc.control.KineticState;
@@ -28,9 +28,9 @@ import dev.nextftc.hardware.driving.MecanumDriverControlled;
 import dev.nextftc.hardware.impl.MotorEx;
 @Disabled
 
-@TeleOp(name="turretTestNextFTC", group=" NextFTC Opmode")
-public class turretNextFTC extends NextFTCOpMode {
-    public turretNextFTC() {
+@TeleOp(name="limelightTurret", group=" NextFTC Opmode")
+public class turretLimelight extends NextFTCOpMode {
+    public turretLimelight() {
 
         addComponents(
                 BindingsComponent.INSTANCE,
@@ -45,22 +45,19 @@ public class turretNextFTC extends NextFTCOpMode {
         );
     }
 
-    public double fx = 1385.92;
-    public double fy = 1385.92;
-    public double cx = 951.982;
-    public double cy = 534.084;
-    public boolean calibratedCamera;
-
-    public AprilTagProcessor aprilTagProcessor;
 
     private final MotorEx frontLeftMotor = new MotorEx("leftFront");
     private final MotorEx frontRightMotor = new MotorEx("rightFront");
     private final MotorEx backLeftMotor = new MotorEx("leftRear");
     private final MotorEx backRightMotor = new MotorEx("rightRear");
 
+    Limelight3A limelight;
+
     double yaw;
 
     double distance;
+
+    double delay;
 
     double prevTime;
 
@@ -68,22 +65,11 @@ public class turretNextFTC extends NextFTCOpMode {
 //    private double lastError = 0;
 
     public void onInit() {
-        if (calibratedCamera) {
-            aprilTagProcessor = AprilTagProcessor.easyCreateWithDefaults();
-        } else {
-            aprilTagProcessor = new AprilTagProcessor.Builder()
-                    .setLensIntrinsics(fx, fy, cx, cy)
-                    .build();
-        }
 
-        multiFunctionSubsystem.INSTANCE.stopPlease().schedule();
-        transferSubsystem.INSTANCE.toNeutral.schedule();
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        limelight.pipelineSwitch(0);
 
-        VisionPortal visionPortal = new VisionPortal.Builder()
-                .setCamera(hardwareMap.get(WebcamName.class, "Camera"))
-                .addProcessor(aprilTagProcessor)
-
-                .build();
+        telemetry.setMsTransmissionInterval(2);
 
         waitForStart();
 
@@ -96,6 +82,9 @@ public class turretNextFTC extends NextFTCOpMode {
     @Override
     public void onStartButtonPressed() {
 
+        limelight.start();
+
+
         DriverControlledCommand driverControlled = new MecanumDriverControlled(
                 frontLeftMotor,
                 frontRightMotor,
@@ -104,7 +93,7 @@ public class turretNextFTC extends NextFTCOpMode {
                 Gamepads.gamepad1().leftStickY().negate(),
                 Gamepads.gamepad1().leftStickX(),
                 Gamepads.gamepad1().rightStickX()
-       );
+        );
 
 
 
@@ -115,33 +104,53 @@ public class turretNextFTC extends NextFTCOpMode {
     }
 
     public void onUpdate() {
+
         BindingManager.update();
 
-        boolean tagFound = false;
+        LLResult llresult = limelight.getLatestResult();
+        LLStatus status = limelight.getStatus();
 
-        for (AprilTagDetection detection : aprilTagProcessor.getDetections()) {
-            int id = detection.id;
-            // Target IDs 20 or 24 (assuming these are the depot tags)
-            if (id == 20 || id == 24) {
-                // Yaw is the orientation angle (in radians) of the tag relative to the camera
-                yaw = detection.ftcPose.yaw;
-                distance = detection.ftcPose.range;
-                tagFound = true;
-                // We break after finding one target to avoid potential conflicts if multiple tags are visible
-                break;
-            }
+        double captureLatency = llresult.getCaptureLatency();
+        double targetingLatency = llresult.getTargetingLatency();
+        double parseLatency = llresult.getParseLatency();
+
+        boolean tagFound = (llresult != null && llresult.isValid());
+
+
+        if (tagFound){
+
+            //turretSubsystem.INSTANCE.updateAngle(llresult.getTx());
+            yaw = llresult.getTx();
+            distance = llresult.getTa();
+            delay = llresult.getStaleness();
+            telemetry.update();
+
         }
+//        else if(!tagFound) {
+//            turretSubsystem.INSTANCE.updateAngleCoast(yaw);
+//        }
 
-        if (tagFound) {
-            turretSubsystem.INSTANCE.updateAngle(yaw);
-        }
 
-        //turretSubsystem.INSTANCE.updateAngle(yaw);
+        turretSubsystem.INSTANCE.updateAngle(yaw);
 
-        telemetry.addData("Tag Found", tagFound ? "YES" : "NO");
-        telemetry.addData("Turret Yaw Error (rad)", String.format("%.4f", yaw));
-        telemetry.addData("Distance (in)", String.format("%.2f", distance));
+
+        telemetry.addData("Tx", llresult.getTx());
+        telemetry.addData("Ty", llresult.getTy());
+        telemetry.addData("Ta", llresult.getTa());
+
+        telemetry.addData("delay", llresult.getStaleness());
+
+
+        telemetry.addData("LL Latency", captureLatency + targetingLatency);
+        telemetry.addData("Parse Latency", parseLatency);
+
+
+        telemetry.addData("LL", "Temp: %.1fC, CPU: %.1f%%, FPS: %d",
+                status.getTemp(), status.getCpu(),(int)status.getFps());
+
+
         telemetry.addData("Chilling", turretSubsystem.INSTANCE.chill);
+        telemetry.addData("Yaw", yaw);
 
         // Show the power being commanded by the PID for debugging
         telemetry.addData("Turret Power Command",

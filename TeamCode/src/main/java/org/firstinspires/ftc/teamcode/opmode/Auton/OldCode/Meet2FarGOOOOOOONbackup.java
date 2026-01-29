@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.opmode.Auton;
+package org.firstinspires.ftc.teamcode.opmode.Auton.OldCode;
 
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.geometry.BezierLine;
@@ -11,30 +11,39 @@ import org.firstinspires.ftc.teamcode.opmode.Subsystems.hoodSubsystem;
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.multiFunctionSubsystem;
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.outtakeSubsystem;
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.transferSubsystem;
+import org.firstinspires.ftc.teamcode.opmode.Subsystems.BLMSubsystem;
+import org.firstinspires.ftc.teamcode.opmode.Subsystems.FLMSubsystem;
+import org.firstinspires.ftc.teamcode.opmode.Subsystems.BRMSubsystem;
+import org.firstinspires.ftc.teamcode.opmode.Subsystems.FRMSubsystem;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 import dev.nextftc.core.commands.Command;
+import dev.nextftc.core.commands.groups.ParallelGroup;
 import dev.nextftc.core.commands.groups.SequentialGroup;
 import dev.nextftc.core.components.SubsystemComponent;
-import dev.nextftc.extensions.pedro.FollowPath;
 import dev.nextftc.extensions.pedro.PedroComponent;
 import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.ftc.components.BulkReadComponent;
 @Disabled
 
-@Autonomous(name = "Meet2FarGOOOOOOON")
-public class Meet2FarGOOOOOOON extends NextFTCOpMode {
+@Autonomous(name = "Meet2FarGOOOOOOONbackup")
+public class Meet2FarGOOOOOOONbackup extends NextFTCOpMode {
     private TelemetryManager panelsTelemetry; // Panels Telemetry instance
 
     private PathChain Path1;
 
-    public Meet2FarGOOOOOOON() {
+    public Meet2FarGOOOOOOONbackup() {
         addComponents(
                 new SubsystemComponent(
                         outtakeSubsystem.INSTANCE,
                         hoodSubsystem.INSTANCE,
                         transferSubsystem.INSTANCE,
-                        multiFunctionSubsystem.INSTANCE),
+                        multiFunctionSubsystem.INSTANCE,
+                        BLMSubsystem.INSTANCE,
+                        FLMSubsystem.INSTANCE,
+                        BRMSubsystem.INSTANCE,
+                        FRMSubsystem.INSTANCE
+                        ),
                 BulkReadComponent.INSTANCE,
                 new PedroComponent(Constants::createFollower)
         );
@@ -43,7 +52,12 @@ public class Meet2FarGOOOOOOON extends NextFTCOpMode {
     public Command bust() {
         return new SequentialGroup(
                 multiFunctionSubsystem.INSTANCE.outtakeSequenceFar(),
-                new FollowPath(Path1)
+                new ParallelGroup(
+                        BLMSubsystem.INSTANCE.gooo,
+                        FLMSubsystem.INSTANCE.gooo,
+                        BRMSubsystem.INSTANCE.gooo,
+                        FRMSubsystem.INSTANCE.gooo
+                )
         );
     }
 
@@ -68,5 +82,9 @@ public class Meet2FarGOOOOOOON extends NextFTCOpMode {
 
 //        panelsTelemetry.debug("Current Velocity", outtakeSubsystem.INSTANCE.getJawn());
 //        panelsTelemetry.update(telemetry);
+    }
+
+    public void onStop() {
+        transferSubsystem.INSTANCE.toNeutral.schedule();
     }
 }

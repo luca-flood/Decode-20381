@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.opmode.Auton;
+package org.firstinspires.ftc.teamcode.opmode.Auton.OldCode;
 
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
@@ -31,9 +31,9 @@ import dev.nextftc.ftc.components.BulkReadComponent;
 
 @Disabled
 
-@Autonomous(name = "Meet3RedFar")
+@Autonomous(name = "Meet3BlueFar")
 
-public class Meet3AutoRedFar extends NextFTCOpMode {
+public class Meet3AutoBlueFar extends NextFTCOpMode {
 
 
     private TelemetryManager panelsTelemetry; // Panels Telemetry instance
@@ -52,7 +52,7 @@ public class Meet3AutoRedFar extends NextFTCOpMode {
     Follower follower;
 
 
-    public Meet3AutoRedFar() {
+    public Meet3AutoBlueFar() {
         addComponents(
                 BindingsComponent.INSTANCE,
                 new SubsystemComponent(
@@ -87,7 +87,7 @@ public class Meet3AutoRedFar extends NextFTCOpMode {
     public void onInit() {
         follower = PedroComponent.follower();
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
-        follower.setStartingPose(new Pose(56, 8, Math.toRadians(90)).mirror());
+        follower.setStartingPose(new Pose(56, 8, Math.toRadians(90)));
 
 //        paths = new Meet2Auton3Blue.Paths(PedroComponent.follower()); // Build paths
         outtakeSubsystem.INSTANCE.off().schedule();
@@ -98,9 +98,9 @@ public class Meet3AutoRedFar extends NextFTCOpMode {
         Path1 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(56.000, 8.000).mirror(), new Pose(56.000, 36.000).mirror())
+                        new BezierLine(new Pose(56.000, 8.000), new Pose(56.000, 36.000))
                 )
-                .setConstantHeadingInterpolation(Math.toRadians(180-90))
+                .setConstantHeadingInterpolation(Math.toRadians(90))
                 .build();
     }
     @Override

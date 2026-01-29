@@ -1,15 +1,12 @@
-package org.firstinspires.ftc.teamcode.opmode.Auton;
+package org.firstinspires.ftc.teamcode.opmode.Auton.OldCode;
 
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.follower.Follower;
-import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
-import com.qualcomm.hardware.limelightvision.LLResult;
-import com.qualcomm.hardware.limelightvision.LLStatus;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
@@ -22,8 +19,6 @@ import org.firstinspires.ftc.teamcode.opmode.Subsystems.transferSubsystem;
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.turretSubsystem;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
-import dev.nextftc.bindings.BindingManager;
-import dev.nextftc.control.KineticState;
 import dev.nextftc.core.commands.Command;
 import dev.nextftc.core.commands.delays.Delay;
 import dev.nextftc.core.commands.groups.SequentialGroup;
@@ -36,9 +31,9 @@ import dev.nextftc.ftc.components.BulkReadComponent;
 
 @Disabled
 
-@Autonomous(name = "Meet3BlueFar")
+@Autonomous(name = "Meet3RedFar")
 
-public class Meet3AutoBlueFar extends NextFTCOpMode {
+public class Meet3AutoRedFar extends NextFTCOpMode {
 
 
     private TelemetryManager panelsTelemetry; // Panels Telemetry instance
@@ -57,7 +52,7 @@ public class Meet3AutoBlueFar extends NextFTCOpMode {
     Follower follower;
 
 
-    public Meet3AutoBlueFar() {
+    public Meet3AutoRedFar() {
         addComponents(
                 BindingsComponent.INSTANCE,
                 new SubsystemComponent(
@@ -92,7 +87,7 @@ public class Meet3AutoBlueFar extends NextFTCOpMode {
     public void onInit() {
         follower = PedroComponent.follower();
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
-        follower.setStartingPose(new Pose(56, 8, Math.toRadians(90)));
+        follower.setStartingPose(new Pose(56, 8, Math.toRadians(90)).mirror());
 
 //        paths = new Meet2Auton3Blue.Paths(PedroComponent.follower()); // Build paths
         outtakeSubsystem.INSTANCE.off().schedule();
@@ -103,9 +98,9 @@ public class Meet3AutoBlueFar extends NextFTCOpMode {
         Path1 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(56.000, 8.000), new Pose(56.000, 36.000))
+                        new BezierLine(new Pose(56.000, 8.000).mirror(), new Pose(56.000, 36.000).mirror())
                 )
-                .setConstantHeadingInterpolation(Math.toRadians(90))
+                .setConstantHeadingInterpolation(Math.toRadians(180-90))
                 .build();
     }
     @Override
