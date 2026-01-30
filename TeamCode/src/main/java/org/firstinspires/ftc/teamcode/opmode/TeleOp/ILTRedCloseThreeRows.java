@@ -502,3 +502,10 @@ public class ILTRedCloseThreeRows extends NextFTCOpMode {
 //            return imu.getRobotYawPitchRollAngles();
 //        }
 }
+// kasra was here
+//just use math.pi;
+//just use .inverse diggas
+//¯\_( ͡° ͜ʖ ͡°)_/¯
+// if (var.(betas) == race.result(indian)){
+// var.(retard) = varMax;
+// }
