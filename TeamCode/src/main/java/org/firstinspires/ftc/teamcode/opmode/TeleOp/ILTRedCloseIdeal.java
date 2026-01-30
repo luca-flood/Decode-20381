@@ -272,8 +272,7 @@ public class ILTRedCloseIdeal extends NextFTCOpMode {
 
         clanka = PedroComponent.follower();
         clanka.setStartingPose(new Pose(102.4067, 79.2259, Math.toRadians(37)));
-//      clanka.setStartingPose(new Pose(72, 72, Math.toRadians(90)));
-
+//        clanka.setStartingPose(new Pose(89.0925, 42.3661, 1.5767));
 
         transferSubsystem.INSTANCE.toNeutral.schedule();
 
@@ -356,7 +355,7 @@ public class ILTRedCloseIdeal extends NextFTCOpMode {
         }
 
         // subsystem automation velo+hood
-        if (autoShoot && (gamepad1.right_trigger > 0.1)) {
+        if (gamepad1.right_trigger > 0.1) {
             outtakeSubsystem.INSTANCE.setVel(getVel(distance)).schedule();
         }
         else if(robotVelocityMag > 5){
