@@ -408,14 +408,14 @@ public class ILTRedCloseIdeal extends NextFTCOpMode {
         } else if (gamepad1.right_bumper) {
             intakeSubsystem.INSTANCE.eat.schedule();
         }
-        else if (blobDetected != null) {
-            if (blobDetected) {
-                intakeSubsystem.INSTANCE.eat.schedule();
-            }
-            else {
-                intakeSubsystem.INSTANCE.sleep.schedule();
-            }
-        }
+//        else if (blobDetected != null) {
+//            if (blobDetected) {
+//                intakeSubsystem.INSTANCE.eat.schedule();
+//            }
+//            else {
+//                intakeSubsystem.INSTANCE.sleep.schedule();
+//            }
+//        }
         else {
             intakeSubsystem.INSTANCE.sleep.schedule();
         }
@@ -466,7 +466,7 @@ public class ILTRedCloseIdeal extends NextFTCOpMode {
         telemetry.addData("Degree Offset (Limelight)", yaw);
         telemetry.addData("Degree Offset (Kinematics)", theta);
         telemetry.addData("Target Ticks", -ticks);
-        telemetry.addData("robotVelocity", clanka.getVelocity());
+        telemetry.addData("Blob Detected", blobDetected);
         telemetry.addData("Distance", distance);
         telemetry.addData("Ideal Velocity", getVel(distance));
         telemetry.addData("Ideal Hood", getHood(distance));
