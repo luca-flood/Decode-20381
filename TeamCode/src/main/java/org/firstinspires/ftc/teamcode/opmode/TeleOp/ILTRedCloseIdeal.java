@@ -11,7 +11,6 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.IMU;
@@ -49,7 +48,7 @@ import dev.nextftc.hardware.impl.CRServoEx;
 import dev.nextftc.hardware.impl.MotorEx;
 
 @TeleOp(name="Red Near Ideal", group="Red ILT")
-public class ILTRedCloseThreeRows extends NextFTCOpMode {
+public class ILTRedCloseIdeal extends NextFTCOpMode {
 
     // conditions + hardware
 
@@ -148,7 +147,7 @@ public class ILTRedCloseThreeRows extends NextFTCOpMode {
     ColorBlobLocatorProcessor greenProcessor;
     VisionPortal portal;
 
-    public ILTRedCloseThreeRows() {
+    public ILTRedCloseIdeal() {
         addComponents(
                 BindingsComponent.INSTANCE,
                 new SubsystemComponent(
@@ -315,15 +314,6 @@ public class ILTRedCloseThreeRows extends NextFTCOpMode {
         clanka.update();
         BindingManager.update();
 
-        if ((proxySens.getDistance(DistanceUnit.INCH) < 5) && colorSens.getDistance(DistanceUnit.INCH) < 5) {
-            hasArtifact = true;
-            backlight.setPosition(4.720);
-        }
-        else {
-            hasArtifact = false;
-            backlight.setPosition(0.277);
-        }
-
         blobDetected = checkForBlobs(portal, purpleProcessor, greenProcessor);
         // robot pose(X, Y, R)
         heading = clanka.getHeading();
@@ -445,6 +435,30 @@ public class ILTRedCloseThreeRows extends NextFTCOpMode {
         if (gamepad1.dpad_up) {
             limelightTracking = !limelightTracking;
         }
+        if (gamepad1.dpad_left) {
+            clanka.setPose(new Pose(7.75, 7.5, Math.toRadians(90)));
+        }
+        if (gamepad1.dpad_right) {
+            clanka.setPose(new Pose(144 - 7.75, 7.5, Math.toRadians(90)));
+        }
+
+        if ((proxySens.getDistance(DistanceUnit.INCH) < 5)) {
+            hasArtifact = true;
+            backlight.setPosition(0.333);
+            if (insideShootingTriangle()){
+                backlight.setPosition(0.388);
+                if (hasCorrectedLL){
+                    backlight.setPosition(0.444);
+                    if (velocityDiff < 20) {
+                        backlight.setPosition(0.555);
+                    }
+                }
+            }
+        }
+        else {
+            hasArtifact = false;
+            backlight.setPosition(0.28);
+        }
 
         telemetry.addData("Distance", distance);
         telemetry.addData("Tag Found", tagFound);
@@ -501,4 +515,13 @@ public class ILTRedCloseThreeRows extends NextFTCOpMode {
 //        public YawPitchRollAngles getIMU(AngleUnit angleUnit){
 //            return imu.getRobotYawPitchRollAngles();
 //        }
+
+    public boolean insideShootingTriangle() {
+        if (clankerY > 72) {
+            return (clankerX < 72) ? clankerY > -clankerX + 144 : clankerY > clankerX;
+        }
+        else {
+            return (clankerX < 72) ? clankerY + 60 < clankerX : clankerY - 84 < -clankerX;
+        }
+    }
 }
