@@ -272,7 +272,6 @@ public class ILTBlueFarIdeal extends NextFTCOpMode {
 
         clanka = PedroComponent.follower();
         clanka.setStartingPose(new Pose(50.388, 40, Math.toRadians(90)));
-//        clanka.setStartingPose(new Pose(40, 79.500, Math.toRadians(143)));
 
         transferSubsystem.INSTANCE.toNeutral.schedule();
 
@@ -315,7 +314,7 @@ public class ILTBlueFarIdeal extends NextFTCOpMode {
         robotVelocityXComp = clanka.getVelocity().getXComponent();
         robotVelocityYComp = clanka.getVelocity().getMagnitude();
 
-        readyShoot = Math.abs(robotVelocityMag) < 5;
+        readyShoot = Math.abs(robotVelocityMag) < 7.5;
 
         // ll digga
         LLResult result = limelight.getLatestResult();
@@ -325,14 +324,15 @@ public class ILTBlueFarIdeal extends NextFTCOpMode {
         distance = Math.sqrt(Math.pow((blueX - clankerX), 2) + Math.pow((blueY - clankerY), 2)) + offset;
         velocityDiff = Math.abs(outtakeSubsystem.INSTANCE.getJawn() - getVel(distance));
 
-        if(readyShoot) {
+        if(readyShoot && insideShootingTriangle()) {
             if (!hasCorrectedLL) {
                 if (tagFound) {
                     yaw = result.getTx();
                     double relativeTickOffset = yaw * ticksToDegrees;
                     finalTargetTicks = turret.getCurrentPosition() + relativeTickOffset;
                     hasCorrectedLL = true;
-                } else {
+                }
+                else {
                     theta = H2(calcDigger());
                     ticks = tickAdjustment(calcDigger());
                     finalTargetTicks = -ticks;
@@ -344,13 +344,6 @@ public class ILTBlueFarIdeal extends NextFTCOpMode {
             ticks = tickAdjustment(calcDigger());
             finalTargetTicks = -ticks;
             hasCorrectedLL = false;
-        }
-
-        if (gamepad2.dpad_right) {
-            finalTargetTicks ++;
-        }
-        if (gamepad2.dpad_left) {
-            finalTargetTicks --;
         }
 
         // subsystem automation velo+hood
@@ -389,16 +382,16 @@ public class ILTBlueFarIdeal extends NextFTCOpMode {
 
         //auto shoot algorithm
         //first, check if turret has corrected already(wraps turret error, robot velocity)
-        if(hasCorrectedLL){
-            autoShoot = true;
-            if(hasArtifact && velocityDiff < 20) {
-                intakeSubsystem.INSTANCE.eat.schedule();
-                multiFunctionSubsystem.INSTANCE.transpherSequencNiga().schedule();
-            }
-            else {
-                intakeSubsystem.INSTANCE.sleep.schedule();
-            }
-        }
+//        if(hasCorrectedLL){
+//            autoShoot = true;
+//            if(hasArtifact && velocityDiff < 20) {
+//                intakeSubsystem.INSTANCE.eat.schedule();
+//                multiFunctionSubsystem.INSTANCE.transpherSequencNiga().schedule();
+//            }
+//            else {
+//                intakeSubsystem.INSTANCE.sleep.schedule();
+//            }
+//        }
 
         // intake digger
         if (gamepad1.left_bumper) {
@@ -479,10 +472,10 @@ public class ILTBlueFarIdeal extends NextFTCOpMode {
         double backRightPower2 = (y2 + x2 - rx2) / denominator2;
 
         if (gamepad1.left_stick_y >= 0.1 || gamepad1.left_stick_x >= 0.1 || gamepad1.left_stick_y <= -0.1 || gamepad1.left_stick_x <= -0.1 || gamepad1.right_stick_y >= 0.2 || gamepad1.right_stick_x >= 0.2 || gamepad1.right_stick_y <= -0.2 || gamepad1.right_stick_x <= -0.2) {
-            frontLeftMotor.setPower(frontLeftPower * 0.85);
-            backLeftMotor.setPower(backLeftPower * 0.65);
-            frontRightMotor.setPower(frontRightPower * 0.55);
-            backRightMotor.setPower(backRightPower * 0.55);
+            frontLeftMotor.setPower(frontLeftPower * 1);
+            backLeftMotor.setPower(backLeftPower * 1);
+            frontRightMotor.setPower(frontRightPower * 1);
+            backRightMotor.setPower(backRightPower * 1);
         } else if (gamepad2.left_stick_y >= 0.1 || gamepad2.left_stick_x >= 0.1 || gamepad2.left_stick_y <= -0.1 || gamepad2.left_stick_x <= -0.1 || gamepad2.right_stick_y >= 0.1 || gamepad2.right_stick_x >= 0.1 || gamepad2.right_stick_y <= -0.1 || gamepad2.right_stick_x <= -0.1) {
             frontLeftMotor.setPower(frontLeftPower2 * 0.3);
             backLeftMotor.setPower(backLeftPower2 * 0.3);
@@ -507,6 +500,8 @@ public class ILTBlueFarIdeal extends NextFTCOpMode {
         telemetry.addData("Ideal Hood", getHood(distance));
         telemetry.addData("Actual Hood", hoodSubsystem.INSTANCE.getDaddy());
         telemetry.addData("Velocity Calc", 10.81866 * distance + 1084.95409);
+        telemetry.addData("Limelight Corrected", hasCorrectedLL);
+        telemetry.addData("Robot Velocity Total Magnitude", robotVelocityMag);
 
 
         // List<ColorBlobLocatorProcessor.Blob> purpleBlobs = purpleProcessor.getBlobs();

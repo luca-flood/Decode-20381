@@ -47,7 +47,7 @@ import dev.nextftc.hardware.driving.MecanumDriverControlled;
 import dev.nextftc.hardware.impl.CRServoEx;
 import dev.nextftc.hardware.impl.MotorEx;
 
-@TeleOp(name="Blue Far Non Ideal", group="Red ILT")
+@TeleOp(name="Blue Far Non Ideal", group="Blue ILT")
 public class ILTBlueFarNonIdeal extends NextFTCOpMode {
 
     // conditions + hardware
@@ -265,14 +265,13 @@ public class ILTBlueFarNonIdeal extends NextFTCOpMode {
         backLeftMotor = new MotorEx("leftRear");
         backRightMotor = new MotorEx("rightRear");
 
-        frontRightMotor.setDirection(1);
-        backRightMotor.setDirection(1);
-        frontLeftMotor.setDirection(1);
-        backLeftMotor.setDirection(1);
+        frontRightMotor.setDirection(-1);
+        backRightMotor.setDirection(-1);
+        frontLeftMotor.setDirection(-1);
+        backLeftMotor.setDirection(-1);
 
         clanka = PedroComponent.follower();
         clanka.setStartingPose(new Pose(56.093, 11.436, Math.toRadians(113)));
-//        clanka.setStartingPose(new Pose(89.0925, 42.3661, 1.5767));
 
         transferSubsystem.INSTANCE.toNeutral.schedule();
 
@@ -280,8 +279,8 @@ public class ILTBlueFarNonIdeal extends NextFTCOpMode {
         turret.getMotor().setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         controller = ControlSystem.builder()
-                .posPid(0.016, 0.0, 0.0001)
-                .basicFF(0, 0, 0.1)
+                .posPid(0.01, 0.0, 0.0001)
+                .basicFF(0, 0, 0.0025)
                 .build();
         controller.setGoal(new KineticState(0.0));
 
@@ -295,14 +294,6 @@ public class ILTBlueFarNonIdeal extends NextFTCOpMode {
     @Override
     public void onStartButtonPressed() {
         limelight.start();
-
-        //drive
-        new MecanumDriverControlled(
-                frontLeftMotor, frontRightMotor, backLeftMotor, backRightMotor,
-                Gamepads.gamepad1().leftStickY().negate(),
-                Gamepads.gamepad1().leftStickX(),
-                Gamepads.gamepad1().rightStickX()
-        ).schedule();
 
         button(() -> gamepad1.y).whenBecomesTrue(multiFunctionSubsystem.INSTANCE.transpherSequencNiga());
 
@@ -323,7 +314,7 @@ public class ILTBlueFarNonIdeal extends NextFTCOpMode {
         robotVelocityXComp = clanka.getVelocity().getXComponent();
         robotVelocityYComp = clanka.getVelocity().getMagnitude();
 
-        readyShoot = Math.abs(robotVelocityMag) < 5;
+        readyShoot = Math.abs(robotVelocityMag) < 7.5;
 
         // ll digga
         LLResult result = limelight.getLatestResult();
@@ -333,14 +324,15 @@ public class ILTBlueFarNonIdeal extends NextFTCOpMode {
         distance = Math.sqrt(Math.pow((blueX - clankerX), 2) + Math.pow((blueY - clankerY), 2)) + offset;
         velocityDiff = Math.abs(outtakeSubsystem.INSTANCE.getJawn() - getVel(distance));
 
-        if(readyShoot) {
+        if(readyShoot && insideShootingTriangle()) {
             if (!hasCorrectedLL) {
                 if (tagFound) {
                     yaw = result.getTx();
                     double relativeTickOffset = yaw * ticksToDegrees;
                     finalTargetTicks = turret.getCurrentPosition() + relativeTickOffset;
                     hasCorrectedLL = true;
-                } else {
+                }
+                else {
                     theta = H2(calcDigger());
                     ticks = tickAdjustment(calcDigger());
                     finalTargetTicks = -ticks;
@@ -355,7 +347,7 @@ public class ILTBlueFarNonIdeal extends NextFTCOpMode {
         }
 
         // subsystem automation velo+hood
-        if ((gamepad1.right_trigger > 0.1)) {
+        if (gamepad1.right_trigger > 0.1) {
             outtakeSubsystem.INSTANCE.setVel(getVel(distance)).schedule();
         }
         else if(robotVelocityMag > 5){
@@ -390,16 +382,16 @@ public class ILTBlueFarNonIdeal extends NextFTCOpMode {
 
         //auto shoot algorithm
         //first, check if turret has corrected already(wraps turret error, robot velocity)
-        if(hasCorrectedLL){
-            autoShoot = true;
-            if(hasArtifact && velocityDiff < 20) {
-                intakeSubsystem.INSTANCE.eat.schedule();
-                multiFunctionSubsystem.INSTANCE.transpherSequencNiga().schedule();
-            }
-            else {
-                intakeSubsystem.INSTANCE.sleep.schedule();
-            }
-        }
+//        if(hasCorrectedLL){
+//            autoShoot = true;
+//            if(hasArtifact && velocityDiff < 20) {
+//                intakeSubsystem.INSTANCE.eat.schedule();
+//                multiFunctionSubsystem.INSTANCE.transpherSequencNiga().schedule();
+//            }
+//            else {
+//                intakeSubsystem.INSTANCE.sleep.schedule();
+//            }
+//        }
 
         // intake digger
         if (gamepad1.left_bumper) {
@@ -420,10 +412,10 @@ public class ILTBlueFarNonIdeal extends NextFTCOpMode {
         }
 
 
-        if (gamepad1.dpad_up) {
+        if (gamepad1.dpad_up || gamepad2.dpad_up) {
             liftL.setPower(1);
             liftR.setPower(-1);
-        } else if (gamepad1.dpad_down) {
+        } else if (gamepad1.dpad_down || gamepad2.dpad_down) {
             liftL.setPower(-1);
             liftR.setPower(1);
         } else {
@@ -459,6 +451,43 @@ public class ILTBlueFarNonIdeal extends NextFTCOpMode {
             backlight.setPosition(0.28);
         }
 
+        double y = gamepad1.left_stick_y;
+        double rx = -gamepad1.right_stick_x * 1.1;
+        double x = -gamepad1.left_stick_x;
+
+        double y2 = gamepad2.left_stick_y;
+        double rx2 = -gamepad2.right_stick_x * 1.1;
+        double x2 = -gamepad2.left_stick_x;
+
+        double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
+        double frontLeftPower = (y + x + rx) / denominator;
+        double backLeftPower = (y - x + rx) / denominator;
+        double frontRightPower = (y - x - rx) / denominator;
+        double backRightPower = (y + x - rx) / denominator;
+
+        double denominator2 = Math.max(Math.abs(y2) + Math.abs(x2) + Math.abs(rx2), 1);
+        double frontLeftPower2 = (y2 + x2 + rx2) / denominator2;
+        double backLeftPower2 = (y2 - x2 + rx2) / denominator2;
+        double frontRightPower2 = (y2 - x2 - rx2) / denominator2;
+        double backRightPower2 = (y2 + x2 - rx2) / denominator2;
+
+        if (gamepad1.left_stick_y >= 0.1 || gamepad1.left_stick_x >= 0.1 || gamepad1.left_stick_y <= -0.1 || gamepad1.left_stick_x <= -0.1 || gamepad1.right_stick_y >= 0.2 || gamepad1.right_stick_x >= 0.2 || gamepad1.right_stick_y <= -0.2 || gamepad1.right_stick_x <= -0.2) {
+            frontLeftMotor.setPower(frontLeftPower * 1);
+            backLeftMotor.setPower(backLeftPower * 1);
+            frontRightMotor.setPower(frontRightPower * 1);
+            backRightMotor.setPower(backRightPower * 1);
+        } else if (gamepad2.left_stick_y >= 0.1 || gamepad2.left_stick_x >= 0.1 || gamepad2.left_stick_y <= -0.1 || gamepad2.left_stick_x <= -0.1 || gamepad2.right_stick_y >= 0.1 || gamepad2.right_stick_x >= 0.1 || gamepad2.right_stick_y <= -0.1 || gamepad2.right_stick_x <= -0.1) {
+            frontLeftMotor.setPower(frontLeftPower2 * 0.3);
+            backLeftMotor.setPower(backLeftPower2 * 0.3);
+            frontRightMotor.setPower(frontRightPower2 * 0.3);
+            backRightMotor.setPower(backRightPower2 * 0.3);
+        } else {
+            frontLeftMotor.setPower(0);
+            backLeftMotor.setPower(0);
+            frontRightMotor.setPower(0);
+            backRightMotor.setPower(0);
+        }
+
         telemetry.addData("Distance", distance);
         telemetry.addData("Tag Found", tagFound);
         telemetry.addData("Turret Pos", turret.getCurrentPosition());
@@ -471,6 +500,8 @@ public class ILTBlueFarNonIdeal extends NextFTCOpMode {
         telemetry.addData("Ideal Hood", getHood(distance));
         telemetry.addData("Actual Hood", hoodSubsystem.INSTANCE.getDaddy());
         telemetry.addData("Velocity Calc", 10.81866 * distance + 1084.95409);
+        telemetry.addData("Limelight Corrected", hasCorrectedLL);
+        telemetry.addData("Robot Velocity Total Magnitude", robotVelocityMag);
 
 
         // List<ColorBlobLocatorProcessor.Blob> purpleBlobs = purpleProcessor.getBlobs();
