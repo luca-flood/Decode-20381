@@ -47,10 +47,12 @@ import dev.nextftc.hardware.driving.MecanumDriverControlled;
 import dev.nextftc.hardware.impl.CRServoEx;
 import dev.nextftc.hardware.impl.MotorEx;
 
-@TeleOp(name="Red Near NOT Ideal", group="Red ILT")
+@TeleOp(name="Red Near Non Ideal", group="Red ILT")
 public class ILTRedCloseNonIdeal extends NextFTCOpMode {
 
     // conditions + hardware
+
+    double velocityDiff = 0;
 
     boolean autoShoot = false;
     MotorEx turret = new MotorEx("turret").zeroed().reversed();
@@ -109,10 +111,10 @@ public class ILTRedCloseNonIdeal extends NextFTCOpMode {
     double yaw;
     double distance;
     double delay;
-    double blueX = 0;
+    double redX = 144;
     double blueY = 144;
     double offset = 8.8;
-    double goalX = 7.1;
+    double goalX = 144-7.1;
     double goalY = 144;
     double visionX = 0;
     double visionY = 0;
@@ -175,20 +177,12 @@ public class ILTRedCloseNonIdeal extends NextFTCOpMode {
 //    }
 
     //large triangle curves
-    public double getVel(double dist) {
-        return 7.65268 * dist + 1123.06996;
+    public double getHood(double distance) {
+        return (distance >= 148.01468) ? -0.0210202 * distance + 3.48553 : 71.71201 * Math.pow(distance, -1.17652);
     }
 
-    public double getHood(double dist) {
-        return 71.71201 * Math.pow(dist, -1.17652);
-    }
-
-    //small triangle curves
-    public double getVelFar(double dist){
-        return 19.17589 * dist - 582.51652;
-    }
-    public double getHoodFar(double dist){
-        return -0.0210202 * dist + 3.48553;
+    public double getVel(double distance) {
+        return (distance >= 148.01468) ? 19.17589 * distance - 582.51652 : 7.65268 * distance + 1123.06996;
     }
 
 
@@ -278,6 +272,7 @@ public class ILTRedCloseNonIdeal extends NextFTCOpMode {
 
         clanka = PedroComponent.follower();
         clanka.setStartingPose(new Pose(79.6702, 91.5592, .783).mirror());
+//        clanka.setStartingPose(new Pose(89.0925, 42.3661, 1.5767));
 
         transferSubsystem.INSTANCE.toNeutral.schedule();
 
@@ -318,45 +313,25 @@ public class ILTRedCloseNonIdeal extends NextFTCOpMode {
         clanka.update();
         BindingManager.update();
 
-        if ((proxySens.getDistance(DistanceUnit.INCH) < 5) && colorSens.getDistance(DistanceUnit.INCH) < 5) {
-            hasArtifact = true;
-            backlight.setPosition(4.720);
-        }
-        else {
-            hasArtifact = false;
-            backlight.setPosition(0.277);
-        }
-
         blobDetected = checkForBlobs(portal, purpleProcessor, greenProcessor);
         // robot pose(X, Y, R)
         heading = clanka.getHeading();
         clankerX = clanka.getPose().getX();
         clankerY = clanka.getPose().getY();
 
-        if(clankerY < 40){
-            far = true;
-        }
-        else{
-            far = false;
-        }
-
         robotVelocityMag = clanka.getVelocity().getMagnitude();
         robotVelocityXComp = clanka.getVelocity().getXComponent();
         robotVelocityYComp = clanka.getVelocity().getMagnitude();
 
-        if(Math.abs(robotVelocityMag) < 10){
-            readyShoot = true;
-        }
-        else{
-            readyShoot = false;
-        }
+        readyShoot = Math.abs(robotVelocityMag) < 5;
 
         // ll digga
         LLResult result = limelight.getLatestResult();
         boolean tagFound = (result != null && result.isValid());
 
 
-        distance = Math.sqrt(Math.pow((blueX - clankerX), 2) + Math.pow((blueY - clankerY), 2)) + offset;
+        distance = Math.sqrt(Math.pow((redX - clankerX), 2) + Math.pow((blueY - clankerY), 2)) + offset;
+        velocityDiff = Math.abs(outtakeSubsystem.INSTANCE.getJawn() - getVel(distance));
 
         if(readyShoot) {
             if (!hasCorrectedLL) {
@@ -380,16 +355,14 @@ public class ILTRedCloseNonIdeal extends NextFTCOpMode {
         }
 
         // subsystem automation velo+hood
-        if (autoShoot && (gamepad1.right_trigger > 0.1)) {
-            if(!far){
-                outtakeSubsystem.INSTANCE.setVel(getVel(distance)).schedule();
-            }
-            else{
-                outtakeSubsystem.INSTANCE.setVel(getVelFar(distance)).schedule();
-            }
+        if (gamepad1.right_trigger > 0.1) {
+            outtakeSubsystem.INSTANCE.setVel(getVel(distance)).schedule();
         }
-        else if(robotVelocityMag > 10){
+        else if(robotVelocityMag > 5){
             outtakeSubsystem.INSTANCE.off().schedule();
+        }
+        else {
+            outtakeSubsystem.INSTANCE.setVel(0).schedule();
         }
 
         if (gamepad1.a) {
@@ -398,7 +371,8 @@ public class ILTRedCloseNonIdeal extends NextFTCOpMode {
 
         if (turretTracking) {
             controller.setGoal(new KineticState(finalTargetTicks));
-        } else {
+        }
+        else {
             //on opposite toggle, set pos to 0
             controller.setGoal(new KineticState(0));
         }
@@ -406,11 +380,7 @@ public class ILTRedCloseNonIdeal extends NextFTCOpMode {
         KineticState currentState = new KineticState(turret.getCurrentPosition(), turret.getVelocity());
         double turretPower = controller.calculate(currentState);
 
-        if(!far){
-            hoodSubsystem.INSTANCE.goon(getHood(distance)).schedule();
-        }else{
-            hoodSubsystem.INSTANCE.goon(getHoodFar(distance)).schedule();
-        }
+        hoodSubsystem.INSTANCE.goon(getHood(distance)).schedule();
 
         if (!turretTracking && Math.abs(turret.getCurrentPosition()) < 5) {
             turret.setPower(0);
@@ -422,8 +392,12 @@ public class ILTRedCloseNonIdeal extends NextFTCOpMode {
         //first, check if turret has corrected already(wraps turret error, robot velocity)
         if(hasCorrectedLL){
             autoShoot = true;
-            if(hasArtifact){
+            if(hasArtifact && velocityDiff < 20) {
+                intakeSubsystem.INSTANCE.eat.schedule();
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga().schedule();
+            }
+            else {
+                intakeSubsystem.INSTANCE.sleep.schedule();
             }
         }
 
@@ -433,14 +407,14 @@ public class ILTRedCloseNonIdeal extends NextFTCOpMode {
         } else if (gamepad1.right_bumper) {
             intakeSubsystem.INSTANCE.eat.schedule();
         }
-        else if (blobDetected != null) {
-            if (blobDetected) {
-                intakeSubsystem.INSTANCE.eat.schedule();
-            }
-            else {
-                intakeSubsystem.INSTANCE.sleep.schedule();
-            }
-        }
+//        else if (blobDetected != null) {
+//            if (blobDetected) {
+//                intakeSubsystem.INSTANCE.eat.schedule();
+//            }
+//            else {
+//                intakeSubsystem.INSTANCE.sleep.schedule();
+//            }
+//        }
         else {
             intakeSubsystem.INSTANCE.sleep.schedule();
         }
@@ -460,6 +434,30 @@ public class ILTRedCloseNonIdeal extends NextFTCOpMode {
         if (gamepad1.dpad_up) {
             limelightTracking = !limelightTracking;
         }
+        if (gamepad1.dpad_left) {
+            clanka.setPose(new Pose(7.75, 7.5, Math.toRadians(90)));
+        }
+        if (gamepad1.dpad_right) {
+            clanka.setPose(new Pose(144 - 7.75, 7.5, Math.toRadians(90)));
+        }
+
+        if ((proxySens.getDistance(DistanceUnit.INCH) < 5)) {
+            hasArtifact = true;
+            backlight.setPosition(0.333);
+            if (insideShootingTriangle()){
+                backlight.setPosition(0.388);
+                if (hasCorrectedLL){
+                    backlight.setPosition(0.444);
+                    if (velocityDiff < 20) {
+                        backlight.setPosition(0.555);
+                    }
+                }
+            }
+        }
+        else {
+            hasArtifact = false;
+            backlight.setPosition(0.28);
+        }
 
         telemetry.addData("Distance", distance);
         telemetry.addData("Tag Found", tagFound);
@@ -467,7 +465,12 @@ public class ILTRedCloseNonIdeal extends NextFTCOpMode {
         telemetry.addData("Degree Offset (Limelight)", yaw);
         telemetry.addData("Degree Offset (Kinematics)", theta);
         telemetry.addData("Target Ticks", -ticks);
-        telemetry.addData("robotVelocity", clanka.getVelocity());
+        telemetry.addData("Blob Detected", blobDetected);
+        telemetry.addData("Distance", distance);
+        telemetry.addData("Ideal Velocity", getVel(distance));
+        telemetry.addData("Ideal Hood", getHood(distance));
+        telemetry.addData("Actual Hood", hoodSubsystem.INSTANCE.getDaddy());
+        telemetry.addData("Velocity Calc", 10.81866 * distance + 1084.95409);
 
 
         // List<ColorBlobLocatorProcessor.Blob> purpleBlobs = purpleProcessor.getBlobs();
@@ -511,4 +514,13 @@ public class ILTRedCloseNonIdeal extends NextFTCOpMode {
 //        public YawPitchRollAngles getIMU(AngleUnit angleUnit){
 //            return imu.getRobotYawPitchRollAngles();
 //        }
+
+    public boolean insideShootingTriangle() {
+        if (clankerY > 72) {
+            return (clankerX < 72) ? clankerY > -clankerX + 144 : clankerY > clankerX;
+        }
+        else {
+            return (clankerX < 72) ? clankerY + 60 < clankerX : clankerY - 84 < -clankerX;
+        }
+    }
 }

@@ -14,6 +14,7 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 
@@ -48,6 +49,7 @@ import org.opencv.core.Scalar;
 
 import java.util.List;
 
+@Disabled
 @TeleOp(name="Blue Tele middle", group="Blue ILT")
 public class ILTBlue extends NextFTCOpMode {
 
@@ -361,6 +363,13 @@ public class ILTBlue extends NextFTCOpMode {
             hasCorrectedLL = false;
         }
 
+        if (gamepad2.dpad_right) {
+            finalTargetTicks ++;
+        }
+        if (gamepad2.dpad_left) {
+            finalTargetTicks --;
+        }
+
         // subsystem automation velo+hood
         if (autoShoot || (gamepad1.right_trigger > 0.1)) {
             outtakeSubsystem.INSTANCE.setVel(getVel(distance)).schedule();
@@ -418,10 +427,10 @@ public class ILTBlue extends NextFTCOpMode {
             intakeSubsystem.INSTANCE.sleep.schedule();
         }
 
-        if (gamepad1.dpad_up) {
+        if (gamepad1.dpad_up || gamepad2.dpad_up) {
             liftL.setPower(1);
             liftR.setPower(-1);
-        } else if (gamepad1.dpad_down) {
+        } else if (gamepad1.dpad_down || gamepad2.dpad_down) {
             liftL.setPower(-1);
             liftR.setPower(1);
         } else {
@@ -431,6 +440,28 @@ public class ILTBlue extends NextFTCOpMode {
 
         if (gamepad1.dpad_up) {
             limelightTracking = !limelightTracking;
+        }
+
+        double y2 = gamepad2.left_stick_y;
+        double rx2 = -gamepad2.right_stick_x * 1.1;
+        double x2 = -gamepad2.left_stick_x;
+
+        double denominator2 = Math.max(Math.abs(y2) + Math.abs(x2) + Math.abs(rx2), 1);
+        double frontLeftPower2 = (y2 + x2 + rx2) / denominator2;
+        double backLeftPower2 = (y2 - x2 + rx2) / denominator2;
+        double frontRightPower2 = (y2 - x2 - rx2) / denominator2;
+        double backRightPower2 = (y2 + x2 - rx2) / denominator2;
+
+        if (gamepad2.left_stick_y >= 0.1 || gamepad2.left_stick_x >= 0.1 || gamepad2.left_stick_y <= -0.1 || gamepad2.left_stick_x <= -0.1 || gamepad2.right_stick_y >= 0.1 || gamepad2.right_stick_x >= 0.1 || gamepad2.right_stick_y <= -0.1 || gamepad2.right_stick_x <= -0.1) {
+            frontLeftMotor.setPower(frontLeftPower2 * 0.2);
+            backLeftMotor.setPower(backLeftPower2 * 0.2);
+            frontRightMotor.setPower(frontRightPower2 * 0.2);
+            backRightMotor.setPower(backRightPower2 * 0.2);
+        } else {
+            frontLeftMotor.setPower(0);
+            backLeftMotor.setPower(0);
+            frontRightMotor.setPower(0);
+            backRightMotor.setPower(0);
         }
 
         telemetry.addData("Distance", distance);

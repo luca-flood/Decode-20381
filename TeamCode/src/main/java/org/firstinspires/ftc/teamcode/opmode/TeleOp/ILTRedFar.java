@@ -47,7 +47,7 @@ import dev.nextftc.hardware.driving.MecanumDriverControlled;
 import dev.nextftc.hardware.impl.CRServoEx;
 import dev.nextftc.hardware.impl.MotorEx;
 
-@TeleOp(name="Red Near Ideal", group="Red ILT")
+@TeleOp(name="Red Far Ideal", group="Red ILT")
 public class ILTRedFar extends NextFTCOpMode {
 
     // conditions + hardware

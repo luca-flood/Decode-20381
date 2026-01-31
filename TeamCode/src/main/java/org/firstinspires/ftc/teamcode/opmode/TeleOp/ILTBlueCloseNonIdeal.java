@@ -47,8 +47,8 @@ import dev.nextftc.hardware.driving.MecanumDriverControlled;
 import dev.nextftc.hardware.impl.CRServoEx;
 import dev.nextftc.hardware.impl.MotorEx;
 
-@TeleOp(name="Red Far Non Ideal", group="Red ILT")
-public class ILTRedFarNonIdeal extends NextFTCOpMode {
+@TeleOp (name = "Blue Near Non Ideal", group = "Blue ILT")
+public class ILTBlueCloseNonIdeal extends NextFTCOpMode {
 
     // conditions + hardware
 
@@ -111,10 +111,10 @@ public class ILTRedFarNonIdeal extends NextFTCOpMode {
     double yaw;
     double distance;
     double delay;
-    double redX = 144;
+    double blueX = 0;
     double blueY = 144;
     double offset = 8.8;
-    double goalX = 144-7.1;
+    double goalX = 7.1;
     double goalY = 144;
     double visionX = 0;
     double visionY = 0;
@@ -147,7 +147,7 @@ public class ILTRedFarNonIdeal extends NextFTCOpMode {
     ColorBlobLocatorProcessor greenProcessor;
     VisionPortal portal;
 
-    public ILTRedFarNonIdeal() {
+    public ILTBlueCloseNonIdeal() {
         addComponents(
                 BindingsComponent.INSTANCE,
                 new SubsystemComponent(
@@ -271,7 +271,8 @@ public class ILTRedFarNonIdeal extends NextFTCOpMode {
         backLeftMotor.setDirection(1);
 
         clanka = PedroComponent.follower();
-        clanka.setStartingPose(new Pose(84.1749, 12.6325, 1.2764).mirror());
+        clanka.setStartingPose(new Pose(65, 80, Math.toRadians(143)));
+//        clanka.setStartingPose(new Pose(89.0925, 42.3661, 1.5767));
 
         transferSubsystem.INSTANCE.toNeutral.schedule();
 
@@ -285,7 +286,7 @@ public class ILTRedFarNonIdeal extends NextFTCOpMode {
         controller.setGoal(new KineticState(0.0));
 
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
-        limelight.pipelineSwitch(1);
+        limelight.pipelineSwitch(0);
         telemetry.setMsTransmissionInterval(1);
 
         targetVel = 0;
@@ -329,7 +330,7 @@ public class ILTRedFarNonIdeal extends NextFTCOpMode {
         boolean tagFound = (result != null && result.isValid());
 
 
-        distance = Math.sqrt(Math.pow((redX - clankerX), 2) + Math.pow((blueY - clankerY), 2)) + offset;
+        distance = Math.sqrt(Math.pow((blueX - clankerX), 2) + Math.pow((blueY - clankerY), 2)) + offset;
         velocityDiff = Math.abs(outtakeSubsystem.INSTANCE.getJawn() - getVel(distance));
 
         if(readyShoot) {
