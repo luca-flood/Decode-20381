@@ -71,6 +71,9 @@ public class ILTclassifierBlue extends NextFTCOpMode {
     double leftMax = 691;
     double rightMax = -809;
 
+    double endingX = 60;
+    double endingY = 80;
+
 
 
     public ILTclassifierBlue() {
@@ -231,7 +234,7 @@ public class ILTclassifierBlue extends NextFTCOpMode {
         Path2 = clanka
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(20.800, 63.800), new Pose(58.800, 79.000))
+                        new BezierLine(new Pose(20.800, 63.800), new Pose(endingX, endingY))
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(143))
                 .build();
@@ -252,7 +255,7 @@ public class ILTclassifierBlue extends NextFTCOpMode {
                 .addPath(
                         new BezierCurve(
                                 new Pose(9.500, 62.670),
-                                new Pose(55.800, 79.500)
+                                new Pose(endingX, endingY)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(140), Math.toRadians(143))
@@ -274,7 +277,7 @@ public class ILTclassifierBlue extends NextFTCOpMode {
                 .addPath(
                         new BezierCurve(
                                 new Pose(9.500, 62.900),
-                                new Pose(55.800,79.500)
+                                new Pose(endingX,endingY)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(140), Math.toRadians(143))

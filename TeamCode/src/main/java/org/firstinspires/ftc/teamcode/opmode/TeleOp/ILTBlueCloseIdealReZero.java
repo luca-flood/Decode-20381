@@ -11,7 +11,6 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.IMU;
@@ -41,16 +40,13 @@ import dev.nextftc.control.KineticState;
 import dev.nextftc.core.components.BindingsComponent;
 import dev.nextftc.core.components.SubsystemComponent;
 import dev.nextftc.extensions.pedro.PedroComponent;
-import dev.nextftc.ftc.Gamepads;
 import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.ftc.components.BulkReadComponent;
-import dev.nextftc.hardware.driving.MecanumDriverControlled;
 import dev.nextftc.hardware.impl.CRServoEx;
 import dev.nextftc.hardware.impl.MotorEx;
 
-@Disabled
-@TeleOp(name="Blue Near Ideal", group="Blue ILT")
-public class ILTBlueCloseNonIdeal extends NextFTCOpMode {
+@TeleOp(name="Blue Near Ideal ReZero", group="Test Goon")
+public class ILTBlueCloseIdealReZero extends NextFTCOpMode {
 
     // conditions + hardware
 
@@ -141,6 +137,8 @@ public class ILTBlueCloseNonIdeal extends NextFTCOpMode {
     double robotVelocityXComp = 0;
     double robotVelocityYComp = 0;
 
+    double danielOffset = 0;
+
     CRServoEx liftL;
     CRServoEx liftR;
 
@@ -149,7 +147,7 @@ public class ILTBlueCloseNonIdeal extends NextFTCOpMode {
     ColorBlobLocatorProcessor greenProcessor;
     VisionPortal portal;
 
-    public ILTBlueCloseNonIdeal() {
+    public ILTBlueCloseIdealReZero() {
         addComponents(
                 BindingsComponent.INSTANCE,
                 new SubsystemComponent(
@@ -267,13 +265,14 @@ public class ILTBlueCloseNonIdeal extends NextFTCOpMode {
         backLeftMotor = new MotorEx("leftRear");
         backRightMotor = new MotorEx("rightRear");
 
-        frontRightMotor.setDirection(1);
-        backRightMotor.setDirection(1);
-        frontLeftMotor.setDirection(1);
-        backLeftMotor.setDirection(1);
+        frontRightMotor.setDirection(-1);
+        backRightMotor.setDirection(-1);
+        frontLeftMotor.setDirection(-1);
+        backLeftMotor.setDirection(-1);
 
         clanka = PedroComponent.follower();
-        clanka.setStartingPose(new Pose(65, 80, Math.toRadians(143)));
+        clanka.setStartingPose(new Pose(40, 79.500, Math.toRadians(143)));
+//        clanka.setStartingPose(new Pose(50.388, 40, Math.toRadians(90)));
 
         transferSubsystem.INSTANCE.toNeutral.schedule();
 
@@ -282,7 +281,7 @@ public class ILTBlueCloseNonIdeal extends NextFTCOpMode {
 
         controller = ControlSystem.builder()
                 .posPid(0.016, 0.0, 0.0001)
-                .basicFF(0, 0, 0.1)
+                .basicFF(0, 0, 0.025)
                 .build();
         controller.setGoal(new KineticState(0.0));
 
@@ -296,14 +295,6 @@ public class ILTBlueCloseNonIdeal extends NextFTCOpMode {
     @Override
     public void onStartButtonPressed() {
         limelight.start();
-
-        //drive
-        new MecanumDriverControlled(
-                frontLeftMotor, frontRightMotor, backLeftMotor, backRightMotor,
-                Gamepads.gamepad1().leftStickY().negate(),
-                Gamepads.gamepad1().leftStickX(),
-                Gamepads.gamepad1().rightStickX()
-        ).schedule();
 
         button(() -> gamepad1.y).whenBecomesTrue(multiFunctionSubsystem.INSTANCE.transpherSequencNiga());
 
@@ -348,6 +339,11 @@ public class ILTBlueCloseNonIdeal extends NextFTCOpMode {
                 }
             }
         }
+
+        // i think gooning the herringbones has worn them in
+        // such that theres less friction, we need to reduce
+        // any Ks or F terms in the PID that were used to offset
+        // the friction, ykwim?
         else {
             theta = H2(calcDigger());
             ticks = tickAdjustment(calcDigger());
@@ -356,11 +352,13 @@ public class ILTBlueCloseNonIdeal extends NextFTCOpMode {
         }
 
         if (gamepad2.dpad_right) {
-            finalTargetTicks ++;
+            danielOffset ++;
         }
         if (gamepad2.dpad_left) {
-            finalTargetTicks --;
+            danielOffset --;
         }
+
+        finalTargetTicks += danielOffset;
 
         // subsystem automation velo+hood
         if (gamepad1.right_trigger > 0.1) {
@@ -373,16 +371,28 @@ public class ILTBlueCloseNonIdeal extends NextFTCOpMode {
             outtakeSubsystem.INSTANCE.setVel(0).schedule();
         }
 
-        if (gamepad1.a) {
-            turretTracking = !turretTracking;
+        if (gamepad1.a || gamepad2.a) {
+            turretTracking = true;
+        }
+        if (gamepad1.b || gamepad2.b) {
+            turret.setCurrentPosition(0);
+            turretTracking = false;
         }
 
         if (turretTracking) {
             controller.setGoal(new KineticState(finalTargetTicks));
         }
         else {
+            telemetry.addLine("Zaddy");
+            danielOffset = 0;
             //on opposite toggle, set pos to 0
-            controller.setGoal(new KineticState(0));
+
+            if (gamepad2.left_bumper) {
+                controller.setGoal(new KineticState(-10));
+            }
+            if (gamepad2.right_bumper) {
+                controller.setGoal(new KineticState(10));
+            }
         }
 
         KineticState currentState = new KineticState(turret.getCurrentPosition(), turret.getVelocity());
@@ -467,9 +477,19 @@ public class ILTBlueCloseNonIdeal extends NextFTCOpMode {
             backlight.setPosition(0.28);
         }
 
+        double y = gamepad1.left_stick_y;
+        double rx = -gamepad1.right_stick_x * 1.1;
+        double x = -gamepad1.left_stick_x;
+
         double y2 = gamepad2.left_stick_y;
         double rx2 = -gamepad2.right_stick_x * 1.1;
         double x2 = -gamepad2.left_stick_x;
+
+        double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
+        double frontLeftPower = (y + x + rx) / denominator;
+        double backLeftPower = (y - x + rx) / denominator;
+        double frontRightPower = (y - x - rx) / denominator;
+        double backRightPower = (y + x - rx) / denominator;
 
         double denominator2 = Math.max(Math.abs(y2) + Math.abs(x2) + Math.abs(rx2), 1);
         double frontLeftPower2 = (y2 + x2 + rx2) / denominator2;
@@ -477,11 +497,16 @@ public class ILTBlueCloseNonIdeal extends NextFTCOpMode {
         double frontRightPower2 = (y2 - x2 - rx2) / denominator2;
         double backRightPower2 = (y2 + x2 - rx2) / denominator2;
 
-        if (gamepad2.left_stick_y >= 0.1 || gamepad2.left_stick_x >= 0.1 || gamepad2.left_stick_y <= -0.1 || gamepad2.left_stick_x <= -0.1 || gamepad2.right_stick_y >= 0.1 || gamepad2.right_stick_x >= 0.1 || gamepad2.right_stick_y <= -0.1 || gamepad2.right_stick_x <= -0.1) {
-            frontLeftMotor.setPower(frontLeftPower2 * 0.2);
-            backLeftMotor.setPower(backLeftPower2 * 0.2);
-            frontRightMotor.setPower(frontRightPower2 * 0.2);
-            backRightMotor.setPower(backRightPower2 * 0.2);
+        if (gamepad1.left_stick_y >= 0.1 || gamepad1.left_stick_x >= 0.1 || gamepad1.left_stick_y <= -0.1 || gamepad1.left_stick_x <= -0.1 || gamepad1.right_stick_y >= 0.2 || gamepad1.right_stick_x >= 0.2 || gamepad1.right_stick_y <= -0.2 || gamepad1.right_stick_x <= -0.2) {
+            frontLeftMotor.setPower(frontLeftPower * 0.85);
+            backLeftMotor.setPower(backLeftPower * 0.65);
+            frontRightMotor.setPower(frontRightPower * 0.55);
+            backRightMotor.setPower(backRightPower * 0.55);
+        } else if (gamepad2.left_stick_y >= 0.1 || gamepad2.left_stick_x >= 0.1 || gamepad2.left_stick_y <= -0.1 || gamepad2.left_stick_x <= -0.1 || gamepad2.right_stick_y >= 0.1 || gamepad2.right_stick_x >= 0.1 || gamepad2.right_stick_y <= -0.1 || gamepad2.right_stick_x <= -0.1) {
+            frontLeftMotor.setPower(frontLeftPower2 * 0.3);
+            backLeftMotor.setPower(backLeftPower2 * 0.3);
+            frontRightMotor.setPower(frontRightPower2 * 0.3);
+            backRightMotor.setPower(backRightPower2 * 0.3);
         } else {
             frontLeftMotor.setPower(0);
             backLeftMotor.setPower(0);
@@ -501,7 +526,7 @@ public class ILTBlueCloseNonIdeal extends NextFTCOpMode {
         telemetry.addData("Ideal Hood", getHood(distance));
         telemetry.addData("Actual Hood", hoodSubsystem.INSTANCE.getDaddy());
         telemetry.addData("Velocity Calc", 10.81866 * distance + 1084.95409);
-
+        telemetry.addData("Current Turret Position", turret.getCurrentPosition());
 
         // List<ColorBlobLocatorProcessor.Blob> purpleBlobs = purpleProcessor.getBlobs();
         // List<ColorBlobLocatorProcessor.Blob> greenBlobs = greenProcessor.getBlobs();

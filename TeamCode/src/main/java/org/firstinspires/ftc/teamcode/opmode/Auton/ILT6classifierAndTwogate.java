@@ -78,8 +78,8 @@ public class ILT6classifierAndTwogate extends NextFTCOpMode {
         double leftMax = 691;
         double rightMax = -809;
 
-    double endingX = 65;
-    double endingY = 80;
+        double endingX = 60;
+        double endingY = 80;
 
 
 
@@ -230,7 +230,7 @@ public class ILT6classifierAndTwogate extends NextFTCOpMode {
             Path2 = clanka
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(20.800, 63.800), new Pose(58.800, 79.000))
+                            new BezierLine(new Pose(20.800, 63.800), new Pose(endingX, endingY))
                     )
                     .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(143))
                     .build();
@@ -251,7 +251,7 @@ public class ILT6classifierAndTwogate extends NextFTCOpMode {
                     .addPath(
                             new BezierCurve(
                                     new Pose(9.500, 62.670),
-                                    new Pose(57, 79.500)
+                                    new Pose(endingX, endingY)
                             )
                     )
                     .setLinearHeadingInterpolation(Math.toRadians(140), Math.toRadians(143))
@@ -274,7 +274,7 @@ public class ILT6classifierAndTwogate extends NextFTCOpMode {
                     .addPath(
                             new BezierCurve(
                                     new Pose(18,84),
-                                    new Pose(59, 76.7)
+                                    new Pose(endingX, endingY)
                             )
                     )
                     .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(143))
@@ -298,7 +298,7 @@ public class ILT6classifierAndTwogate extends NextFTCOpMode {
                             new BezierCurve(
                                     new Pose(18, 38),
                                     new Pose(40, 40),
-                                    new Pose(57, 79.500)
+                                    new Pose(endingX, endingY)
                             )
                     )
                     .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(143))

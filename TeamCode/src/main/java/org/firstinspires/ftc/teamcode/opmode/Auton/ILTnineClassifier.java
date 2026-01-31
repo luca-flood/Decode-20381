@@ -82,7 +82,7 @@ public class ILTnineClassifier extends NextFTCOpMode {
     double robotVelocityMag = 0;
     double robotVelocityXComp = 0;
     double robotVelocityYComp = 0;
-    double endingX = 65;
+    double endingX = 60;
     double endingY = 80;
     boolean limelightTracking = false;
     boolean hasCorrectedLL = false;
