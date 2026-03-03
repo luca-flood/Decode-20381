@@ -11,6 +11,7 @@ import com.pedropathing.util.Timer;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.hoodSubsystem;
@@ -37,6 +38,7 @@ import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.ftc.components.BulkReadComponent;
 import dev.nextftc.hardware.impl.MotorEx;
 
+@Disabled
 
 @Autonomous(name = "Red nine  Classifier", group = "Red")
 public class ILTnineClassifierRed extends NextFTCOpMode {
@@ -83,7 +85,7 @@ public class ILTnineClassifierRed extends NextFTCOpMode {
     double robotVelocityXComp = 0;
     double robotVelocityYComp = 0;
     double endingX = 60;
-    double endingY = 90;
+    double endingY = 80;
     boolean limelightTracking = false;
     boolean hasCorrectedLL = false;
     double finalTargetTicks;
@@ -91,6 +93,7 @@ public class ILTnineClassifierRed extends NextFTCOpMode {
     boolean readyShoot = false;
     double ticksToDegrees = (130.0 / 36.0) * (384.5 / 360.0);
 
+    double shootAngle = 39;
 
     public ILTnineClassifierRed() {
         addComponents(
@@ -123,14 +126,15 @@ public class ILTnineClassifierRed extends NextFTCOpMode {
                                 new Delay(0.1),
                                 intakeSubsystem.INSTANCE.eat,
                                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
-                                outtakeSubsystem.INSTANCE.setVel(0)
+                                outtakeSubsystem.INSTANCE.setVel(0),
+                                intakeSubsystem.INSTANCE.slowSuck
                         ),
                         new FollowPath(Path1, true, 0.8)
                 ),
                 intakeSubsystem.INSTANCE.slowSuck,
                 new ParallelGroup(
                         new FollowPath(Path2),
-                        outtakeSubsystem.INSTANCE.setVel(1860),
+                        outtakeSubsystem.INSTANCE.setVel(1880),
                         hoodSubsystem.INSTANCE.goon(.35)
                 ),
                 intakeSubsystem.INSTANCE.eat,
@@ -143,12 +147,12 @@ public class ILTnineClassifierRed extends NextFTCOpMode {
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
                 hoodSubsystem.INSTANCE.goon(.29),
                 outtakeSubsystem.INSTANCE.setVel(0),
-                intakeSubsystem.INSTANCE.slowSuck,
+                intakeSubsystem.INSTANCE.eat,
                 new FollowPath(Path3),
                 new Delay(1),
                 new ParallelGroup(
                         new FollowPath(Path4),
-                        outtakeSubsystem.INSTANCE.setVel(1860),
+                        outtakeSubsystem.INSTANCE.setVel(1880),
                         hoodSubsystem.INSTANCE.goon(.35)
                 ),
                 intakeSubsystem.INSTANCE.eat,
@@ -166,7 +170,7 @@ public class ILTnineClassifierRed extends NextFTCOpMode {
                 intakeSubsystem.INSTANCE.slowSuck,
                 new ParallelGroup(
                         new FollowPath(Path8),
-                        outtakeSubsystem.INSTANCE.setVel(1860),
+                        outtakeSubsystem.INSTANCE.setVel(1880),
                         hoodSubsystem.INSTANCE.goon(.35)
                 ),
                 intakeSubsystem.INSTANCE.eat,
@@ -185,7 +189,7 @@ public class ILTnineClassifierRed extends NextFTCOpMode {
                 intakeSubsystem.INSTANCE.slowSuck,
                 new ParallelGroup(
                         new FollowPath(Path10),
-                        outtakeSubsystem.INSTANCE.setVel(1860),
+                        outtakeSubsystem.INSTANCE.setVel(1880),
                         hoodSubsystem.INSTANCE.goon(.35)
                 ),
                 intakeSubsystem.INSTANCE.eat,
@@ -248,33 +252,33 @@ public class ILTnineClassifierRed extends NextFTCOpMode {
                         new BezierCurve(
                                 new Pose(20.800, 63.800).mirror(),
                                 new Pose(82, 63).mirror(),
-                                new Pose(endingX, endingY).mirror()
+                                new Pose(endingX, endingY + 5).mirror()
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(45))
+                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(shootAngle))
                 .build();
 
         Path3 = clanka
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(58.800, 75.000).mirror(),
+                                new Pose(endingX, endingY + 5).mirror(),
                                 new Pose(35.000, 60.000).mirror(),
-                                new Pose(11.500, 62.670).mirror()
+                                new Pose(11.500, 65.170).mirror()
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(37), Math.toRadians(40))
+                .setLinearHeadingInterpolation(Math.toRadians(shootAngle), Math.toRadians(40))
                 .build();
         Path4 = clanka
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(11.500, 62.670).mirror(),
+                                new Pose(11.500, 65.170).mirror(),
                                 new Pose(72, 62).mirror(),
                                 new Pose(endingX, endingY).mirror()
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(40), Math.toRadians(45))
+                .setLinearHeadingInterpolation(Math.toRadians(40), Math.toRadians(shootAngle))
                 .build();
 
         //path to grab 1st row of balls
@@ -282,11 +286,11 @@ public class ILTnineClassifierRed extends NextFTCOpMode {
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(57, 79.500).mirror(),
+                                new Pose(endingX, endingY).mirror(),
                                 new Pose(18,84).mirror()
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(37), Math.toRadians(0))
+                .setLinearHeadingInterpolation(Math.toRadians(shootAngle), Math.toRadians(0))
                 .build();
         //path from 1st row of balls to shooting pos
         Path8 = clanka
@@ -297,42 +301,42 @@ public class ILTnineClassifierRed extends NextFTCOpMode {
                                 new Pose(endingX, endingY).mirror()
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(45))
+                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(shootAngle))
                 .build();
         //path from shooting pos to third row of balls
         Path9 = clanka
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(59, 76.7).mirror(),
+                                new Pose(endingX, endingY).mirror(),
                                 new Pose(70, 30).mirror(),
                                 new Pose(22, 38).mirror()
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(37), Math.toRadians(0))
+                .setLinearHeadingInterpolation(Math.toRadians(shootAngle), Math.toRadians(0))
                 .build();
 
         Path10 = clanka
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(18, 38).mirror(),
+                                new Pose(22, 38).mirror(),
                                 new Pose(50, 40).mirror(),
                                 new Pose(endingX, endingY).mirror()
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(45))
+                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(shootAngle))
                 .build();
 
         Path11 = clanka
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(57, 79.500).mirror(),
+                                new Pose(endingX, endingY).mirror(),
                                 new Pose(40, 79.500).mirror()
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(37), Math.toRadians(37))
+                .setLinearHeadingInterpolation(Math.toRadians(shootAngle), Math.toRadians(37))
                 .build();
 
 

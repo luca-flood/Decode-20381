@@ -11,6 +11,7 @@ import com.pedropathing.util.Timer;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.hoodSubsystem;
@@ -33,6 +34,7 @@ import dev.nextftc.extensions.pedro.PedroComponent;
 import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.ftc.components.BulkReadComponent;
 import dev.nextftc.hardware.impl.MotorEx;
+@Disabled
 
 @Autonomous(name = "Blue 1 Far", group = "Blue Far")
 public class ILTFarBlue extends NextFTCOpMode {
@@ -96,7 +98,7 @@ public class ILTFarBlue extends NextFTCOpMode {
 
     private Command autonomousRoutine() {
         return new SequentialGroup(
-                outtakeSubsystem.INSTANCE.setVel(2460),
+                outtakeSubsystem.INSTANCE.setVel(2440),
                 hoodSubsystem.INSTANCE.goon(.15),
                 intakeSubsystem.INSTANCE.slowSuck,
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
@@ -111,14 +113,14 @@ public class ILTFarBlue extends NextFTCOpMode {
                 new FollowPath(Path1),
                 intakeSubsystem.INSTANCE.sleep,
                 new FollowPath(Path2),
-                outtakeSubsystem.INSTANCE.setVel(2460),
+                outtakeSubsystem.INSTANCE.setVel(2440),
                 hoodSubsystem.INSTANCE.goon(.15),
                 intakeSubsystem.INSTANCE.slowSuck,
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
                 hoodSubsystem.INSTANCE.goon(.2),
-                new Delay(.25),
+                new Delay(.5),
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
-                new Delay(0.3),
+                new Delay(.5),
                 multiFunctionSubsystem.INSTANCE.transpherSequencNiga(),
                 intakeSubsystem.INSTANCE.sleep,
                 outtakeSubsystem.INSTANCE.setVel(0),

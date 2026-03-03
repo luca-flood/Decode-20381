@@ -18,34 +18,36 @@ public class chassis1 extends LinearOpMode {
         leftMotor.setDirection(DcMotor.Direction.REVERSE);
         rightMotor.setDirection(DcMotor.Direction.REVERSE);
 
+        double leftStickY = 0;
 
 
         waitForStart();
 
 
-
         while (opModeIsActive()) {
 
+            leftStickY = gamepad1.left_stick_y;
 
 
-            if (gamepad1.left_stick_y > 0.1 ) {
-                leftMotor.setPower(gamepad1.left_stick_y);
-                rightMotor.setPower(gamepad1.left_stick_y);
+            if (leftStickY>0.1 || leftStickY<0.1){
+                leftMotor.setPower(leftStickY);
+                rightMotor.setPower(leftStickY);
+            }
+
+            if (gamepad1.right_stick_x > 0.1){
+                leftMotor.setPower(gamepad1.right_stick_x);
+                rightMotor.setPower(gamepad1.right_stick_x * -1);
 
             }
-            else{
+
+            if (gamepad1.right_stick_x < -0.1){
+                leftMotor.setPower(gamepad1.right_stick_x);
+                rightMotor.setPower(gamepad1.right_stick_x * -1);
+            }else {
                 leftMotor.setPower(0);
                 rightMotor.setPower(0);
             }
 
-            if (gamepad1.left_stick_y < 0.1) {
-                leftMotor.setPower(gamepad1.left_stick_y);
-                rightMotor.setPower(gamepad1.left_stick_y);
-            }
-            else{
-                leftMotor.setPower(0);
-                rightMotor.setPower(0);
-            }
 
         }
     }

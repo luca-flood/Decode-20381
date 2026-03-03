@@ -11,6 +11,7 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.IMU;
@@ -46,6 +47,7 @@ import dev.nextftc.ftc.components.BulkReadComponent;
 import dev.nextftc.hardware.driving.MecanumDriverControlled;
 import dev.nextftc.hardware.impl.CRServoEx;
 import dev.nextftc.hardware.impl.MotorEx;
+@Disabled
 
 @TeleOp(name="Red Far Ideal", group="Red ILT")
 public class ILTRedFar extends NextFTCOpMode {
@@ -427,10 +429,10 @@ public class ILTRedFar extends NextFTCOpMode {
             limelightTracking = !limelightTracking;
         }
         if (gamepad1.dpad_left) {
-            clanka.setPose(new Pose(7.75, 7.5, Math.toRadians(90)));
+            clanka.setPose(new Pose(7.5, 7.5, Math.toRadians(90)));
         }
         if (gamepad1.dpad_right) {
-            clanka.setPose(new Pose(144 - 7.75, 7.5, Math.toRadians(90)));
+            clanka.setPose(new Pose(12.75, 7.5, Math.toRadians(90)));
         }
 
         if ((proxySens.getDistance(DistanceUnit.INCH) < 5)) {

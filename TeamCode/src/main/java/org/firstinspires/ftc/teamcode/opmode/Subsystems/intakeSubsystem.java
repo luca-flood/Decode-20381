@@ -18,4 +18,9 @@ public class intakeSubsystem implements Subsystem {
     public Command spit = new SetPower(intake, 1).requires(this);
 
     public Command sleep = new SetPower(intake, 0).requires(this);
+
+    public Command setSuck(double power)
+    {
+        return new SetPower(intake, power).requires(this);
+    }
 }

@@ -37,6 +37,7 @@ import org.firstinspires.ftc.teamcode.opmode.Subsystems.turretSubsystem;
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.turretSubsystemLimelight;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
+@Disabled
 @TeleOp(name="testmaxxing", group="Linear Opmode")
 public class veloHoodtest extends NextFTCOpMode {
 

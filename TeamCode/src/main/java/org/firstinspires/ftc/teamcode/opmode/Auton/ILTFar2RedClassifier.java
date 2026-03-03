@@ -11,6 +11,7 @@ import com.pedropathing.util.Timer;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.teamcode.opmode.Subsystems.hoodSubsystem;
@@ -33,6 +34,7 @@ import dev.nextftc.extensions.pedro.PedroComponent;
 import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.ftc.components.BulkReadComponent;
 import dev.nextftc.hardware.impl.MotorEx;
+@Disabled
 
 @Autonomous(name = "Red 2 Classifier Far", group = "Red Far")
 public class ILTFar2RedClassifier extends NextFTCOpMode {
@@ -261,7 +263,7 @@ public class ILTFar2RedClassifier extends NextFTCOpMode {
                         new BezierCurve(
                                 new Pose(56.000, 8.000).mirror(),
                                 new Pose(91.784, 75.452).mirror(),
-                                new Pose(11.336, 63.019).mirror()
+                                new Pose(11.5, 61.170).mirror()
                         )
                 ).setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(40))
 
@@ -269,7 +271,7 @@ public class ILTFar2RedClassifier extends NextFTCOpMode {
 
         Path7 = clanka.pathBuilder().addPath(
                         new BezierCurve(
-                                new Pose(11.336, 61.019).mirror(),
+                                new Pose(11.5, 61.170).mirror(),
                                 new Pose(91.784, 75.452).mirror(),
                                 new Pose(56.093, 11.436).mirror()
                         )

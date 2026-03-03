@@ -11,6 +11,7 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.IMU;
@@ -40,14 +41,13 @@ import dev.nextftc.control.KineticState;
 import dev.nextftc.core.components.BindingsComponent;
 import dev.nextftc.core.components.SubsystemComponent;
 import dev.nextftc.extensions.pedro.PedroComponent;
-import dev.nextftc.ftc.Gamepads;
 import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.ftc.components.BulkReadComponent;
-import dev.nextftc.hardware.driving.MecanumDriverControlled;
 import dev.nextftc.hardware.impl.CRServoEx;
 import dev.nextftc.hardware.impl.MotorEx;
+@Disabled
 
-@TeleOp(name="Red Close Non Ideal", group="Red ILT")
+@TeleOp(name="Red Close Nonideal", group="Red ILT")
 public class ILTRedCloseNonIdeal extends NextFTCOpMode {
 
     // conditions + hardware
@@ -111,7 +111,7 @@ public class ILTRedCloseNonIdeal extends NextFTCOpMode {
     double yaw;
     double distance;
     double delay;
-    double blueX = 0;
+    double redX = 144;
     double blueY = 144;
     double offset = 8.8;
     double goalX = 144-7.1;
@@ -321,7 +321,7 @@ public class ILTRedCloseNonIdeal extends NextFTCOpMode {
         boolean tagFound = (result != null && result.isValid());
 
 
-        distance = Math.sqrt(Math.pow((blueX - clankerX), 2) + Math.pow((blueY - clankerY), 2)) + offset;
+        distance = Math.sqrt(Math.pow((redX - clankerX), 2) + Math.pow((blueY - clankerY), 2)) + offset;
         velocityDiff = Math.abs(outtakeSubsystem.INSTANCE.getJawn() - getVel(distance));
 
         if(readyShoot && insideShootingTriangle()) {
