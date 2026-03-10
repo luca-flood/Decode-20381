@@ -52,17 +52,18 @@ public class chassis2 extends LinearOpMode {
             }
             if (rightStickInput > 0.1) {
                 frontRight.setPower(rightStickInput);
-                frontLeft.setPower(rightStickInput);
+                frontLeft.setPower(-rightStickInput);
                 backRight.setPower(rightStickInput);
-                backLeft.setPower(rightStickInput);
+                backLeft.setPower(-rightStickInput);
             }
             if (rightStickInput < 0.1) {
                 frontRight.setPower(rightStickInput);
-                frontLeft.setPower(rightStickInput);
+                frontLeft.setPower(-rightStickInput);
                 backRight.setPower(rightStickInput);
-                backLeft.setPower(rightStickInput);
-
+                backLeft.setPower(-rightStickInput);
             }
+
+
         }
     }
 }
