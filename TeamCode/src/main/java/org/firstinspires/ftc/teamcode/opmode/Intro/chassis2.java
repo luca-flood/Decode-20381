@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode.opmode.Intro;
 
 
+import static java.lang.Math.abs;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -17,7 +19,7 @@ public class chassis2 extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-
+        //Map motors to variables, set up motor direction...
         frontRight = hardwareMap.get(DcMotor.class, "fr");
         frontLeft = hardwareMap.get(DcMotor.class, "fl");
         backLeft = hardwareMap.get(DcMotor.class, "bl");
@@ -28,6 +30,9 @@ public class chassis2 extends LinearOpMode {
         backLeft.setDirection(DcMotor.Direction.FORWARD);
         backRight.setDirection(DcMotor.Direction.REVERSE);
 
+        double deadzoneLeft = 0.1;
+        double deadzoneRight = 0.1;
+
 
         waitForStart();
 
@@ -36,36 +41,24 @@ public class chassis2 extends LinearOpMode {
 
             double rightStickInput = gamepad1.right_stick_x;
             double leftStickInput = gamepad1.left_stick_y;
-
-            if (leftStickInput > 0.1) {
+            //Left stick motion
+            if (abs(leftStickInput) > deadzoneLeft) {
                 frontRight.setPower(leftStickInput);
                 frontLeft.setPower(leftStickInput);
                 backRight.setPower(leftStickInput);
                 backLeft.setPower(leftStickInput);
             }
-            if (leftStickInput < 0.1) {
-                frontRight.setPower(leftStickInput);
-                frontLeft.setPower(leftStickInput);
-                backRight.setPower(leftStickInput);
-                backLeft.setPower(leftStickInput);
 
-            }
-            if (rightStickInput > 0.1) {
+            //Right stick motion (rotation)
+            if (abs(rightStickInput) > deadzoneRight) {
                 frontRight.setPower(rightStickInput);
-                frontLeft.setPower(rightStickInput);
+                frontLeft.setPower(-rightStickInput);
                 backRight.setPower(rightStickInput);
-                backLeft.setPower(rightStickInput);
-            }
-            if (rightStickInput < 0.1) {
-                frontRight.setPower(rightStickInput);
-                frontLeft.setPower(rightStickInput);
-                backRight.setPower(rightStickInput);
-                backLeft.setPower(rightStickInput);
-
+                backLeft.setPower(-rightStickInput);
             }
         }
     }
 }
 
-//testing if my edit saved
+//2nd commit by vishwa - deadzone variables + absolute value
 
