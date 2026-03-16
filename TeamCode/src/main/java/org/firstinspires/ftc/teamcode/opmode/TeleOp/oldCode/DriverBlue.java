@@ -69,7 +69,6 @@ public class DriverBlue extends LinearOpMode {
         motorBackLeft.setDirection(DcMotor.Direction.FORWARD);
         motorFrontRight.setDirection(DcMotor.Direction.REVERSE);
         motorBackRight.setDirection(DcMotor.Direction.FORWARD);
-        motorFrontLeft.setDirection(DcMotor.Direction.FORWARD);
 
 
         liftRotateMotorLeft.setDirection(DcMotor.Direction.REVERSE);
