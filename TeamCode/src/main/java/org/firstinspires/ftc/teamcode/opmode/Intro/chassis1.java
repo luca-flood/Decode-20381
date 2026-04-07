@@ -18,14 +18,17 @@ public class chassis1 extends LinearOpMode {
         Servo rightServo = hardwareMap.get(Servo.class, "Longa_James ");
         Servo leftServo = hardwareMap.get(Servo.class, "Noah-chan");
         DcMotor leftMotor = hardwareMap.dcMotor.get("left");
+        //Noah-chan is 1
         DcMotor rightMotor = hardwareMap.dcMotor.get("right");
+        //Longa james is in 0
+
         leftMotor.setDirection(DcMotor.Direction.REVERSE);
         rightMotor.setDirection(DcMotor.Direction.REVERSE);
 
 
 
         double leftStickY = 0;
-        double leftServoPos = 0.5;
+        double leftServoPos = 0;
         double rightServoPos = 0;
         waitForStart();
 
@@ -56,25 +59,22 @@ public class chassis1 extends LinearOpMode {
             }
 
 
-
-
-            leftServo.setPosition(leftServoPos);
-            rightServo.setPosition(rightServoPos);
-
             if (gamepad1.a){
-                leftServoPos += 0.01;
+                leftServoPos = 1;
             }
             if (gamepad1.b){
-                rightServoPos += 0.01;
+                rightServoPos = 1;
             }
 
 
             if (gamepad1.x){
-                leftServoPos -= 0.01;
+                leftServoPos = 0;
             }
             if (gamepad1.y){
-                rightServoPos += 0.01;
+                rightServoPos = 0;
             }
+            leftServo.setPosition(leftServoPos);
+            rightServo.setPosition(rightServoPos);
 
             telemetry.addData("right pos", rightServo.getPosition());
             telemetry.addData("left pos", leftServo.getPosition());
