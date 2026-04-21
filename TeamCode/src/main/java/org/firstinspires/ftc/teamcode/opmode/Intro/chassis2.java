@@ -11,8 +11,9 @@ public class chassis2 extends LinearOpMode {
 
     DcMotor frontRight;
     DcMotor frontLeft;
-    DcMotor backRight;
+    //DcMotor backRight;
     DcMotor backLeft;
+    DcMotor arm;
 
 
     @Override
@@ -21,12 +22,14 @@ public class chassis2 extends LinearOpMode {
         frontRight = hardwareMap.get(DcMotor.class, "fr");
         frontLeft = hardwareMap.get(DcMotor.class, "fl");
         backLeft = hardwareMap.get(DcMotor.class, "bl");
-        backRight = hardwareMap.get(DcMotor.class, "br");
+        //backRight = hardwareMap.get(DcMotor.class, "br");
+        arm = hardwareMap.get(DcMotor.class, "br");
 
         frontLeft.setDirection(DcMotor.Direction.REVERSE);
         frontRight.setDirection(DcMotor.Direction.REVERSE);
         backLeft.setDirection(DcMotor.Direction.FORWARD);
-        backRight.setDirection(DcMotor.Direction.REVERSE);
+        //backRight.setDirection(DcMotor.Direction.REVERSE);
+        arm.setDirection(DcMotor.Direction.FORWARD);
 
 
         waitForStart();
@@ -37,31 +40,52 @@ public class chassis2 extends LinearOpMode {
             double rightStickInput = gamepad1.right_stick_x;
             double leftStickInput = gamepad1.left_stick_y;
 
+            double leftTriggerInput = gamepad1.left_trigger;
+            double rightTriggerInput = gamepad1.right_trigger;
+
             if (leftStickInput > 0.1) {
                 frontRight.setPower(leftStickInput);
                 frontLeft.setPower(leftStickInput);
-                backRight.setPower(leftStickInput);
+                //backRight.setPower(leftStickInput);
                 backLeft.setPower(leftStickInput);
             }
             if (leftStickInput < 0.1) {
                 frontRight.setPower(leftStickInput);
                 frontLeft.setPower(leftStickInput);
-                backRight.setPower(leftStickInput);
+                //backRight.setPower(leftStickInput);
                 backLeft.setPower(leftStickInput);
 
             }
             if (rightStickInput > 0.1) {
                 frontRight.setPower(rightStickInput);
                 frontLeft.setPower(-rightStickInput);
-                backRight.setPower(rightStickInput);
+                //backRight.setPower(rightStickInput);
                 backLeft.setPower(-rightStickInput);
             }
             if (rightStickInput < 0.1) {
                 frontRight.setPower(rightStickInput);
                 frontLeft.setPower(-rightStickInput);
-                backRight.setPower(rightStickInput);
+                //backRight.setPower(rightStickInput);
                 backLeft.setPower(-rightStickInput);
             }
+
+            if (leftStickInput > 0.1) {
+                frontRight.setPower(leftStickInput);
+                frontLeft.setPower(leftStickInput);
+                //backRight.setPower(leftStickInput);
+                backLeft.setPower(leftStickInput);
+            }
+
+            if (rightTriggerInput > 0.1) {
+                arm.setPower(rightTriggerInput);
+            } else {
+                arm.setPower(0.1);
+            }
+
+
+
+            telemetry.addData("Motor position", arm.getCurrentPosition());
+            telemetry.update();
 
 
         }
