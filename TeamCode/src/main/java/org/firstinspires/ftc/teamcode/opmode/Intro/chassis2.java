@@ -84,14 +84,19 @@ public class chassis2 extends LinearOpMode {
 
             if (rightTriggerInput > 0.1) {
 
-                arm.setPower(rightTriggerInput*0.3);
+                arm.setPower(rightTriggerInput * 0.3);
+                //pos = pos + 10;
+            }
+            if (leftTriggerInput > 0.1) {
+
+                arm.setPower(-leftTriggerInput*0.3);
                 //pos = pos + 10;
             } else {
                 arm.setPower(0.1);
             }
             //arm.setTargetPosition(pos);
 
-
+            telemetry.addData("left trigger input", leftTriggerInput);
             telemetry.addData("right trigger input", rightTriggerInput);
             telemetry.addData("Motor position", arm.getCurrentPosition());
             //telemetry.addData("Position (var): ", pos);
